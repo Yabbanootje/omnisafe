@@ -1,5 +1,5 @@
 # Sync with project.dependencies
-safety-gymnasium @ git+https://github.com/Yabbanootje/safety-gymnasium.git
+safety-gymnasium @ git+https://github.com/Yabbanootje/safety-gymnasium.git@main
 torch >= 1.10.0
 numpy >= 1.20.0
 tensorboard >= 2.8.0
