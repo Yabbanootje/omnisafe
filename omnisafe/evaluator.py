@@ -470,7 +470,7 @@ class Evaluator:  # pylint: disable=too-many-instance-attributes
 
         horizon = 1000
         frames = []
-        obs, _ = self._env.reset()
+        obs, _ = self._env.reset(resetting_for_render = True)
         if self._render_mode == 'human':
             self._env.render()
         elif self._render_mode == 'rgb_array':
