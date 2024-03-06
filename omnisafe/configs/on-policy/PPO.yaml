@@ -66,8 +66,6 @@ defaults:
     lam_c: 0.95
     # clip ratio
     clip: 0.2
-    # cost limit
-    cost_limit: 25.0 # ---------- Ignore this (only to avoid errors) ----------
     # advantage estimation method, options: gae, retrace
     adv_estimation_method: gae
     # standardize reward advantage
