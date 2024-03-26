@@ -236,6 +236,7 @@ class AlgoWrapper:
         camera_name: str = 'track',
         width: int = 256,
         height: int = 256,
+        epochs_to_render: list = [],
     ) -> None:
         """Evaluate and render some episodes.
 
@@ -247,21 +248,26 @@ class AlgoWrapper:
                 capture images. Defaults to 'track'.
             width (int, optional): The width of the rendered image. Defaults to 256.
             height (int, optional): The height of the rendered image. Defaults to 256.
+            epochs_to_render (list, optional): The list of epochs that should be rendered.
+                Defaults to [], meaning all.
 
         Raises:
             AssertionError: If the :meth:`learn` method has not been called.
         """
         assert self._evaluator is not None, 'Please run learn() first!'
         scan_dir = os.scandir(os.path.join(self.agent.logger.log_dir, 'torch_save'))
+        for epoch in epochs_to_render:
+            assert epoch < len(scan_dir), f'Invalid epoch given: {epoch}'
         for item in scan_dir:
             if item.is_file() and item.name.split('.')[-1] == 'pt':
-                self._evaluator.load_saved(
-                    save_dir=self.agent.logger.log_dir,
-                    model_name=item.name,
-                    render_mode=render_mode,
-                    camera_name=camera_name,
-                    width=width,
-                    height=height,
-                )
-                self._evaluator.render(num_episodes=num_episodes)
+                if epochs_to_render == [] or item.name.split('.')[0].split('-')[-1] in epochs_to_render:
+                    self._evaluator.load_saved(
+                        save_dir=self.agent.logger.log_dir,
+                        model_name=item.name,
+                        render_mode=render_mode,
+                        camera_name=camera_name,
+                        width=width,
+                        height=height,
+                    )
+                    self._evaluator.render(num_episodes=num_episodes)
         scan_dir.close()
