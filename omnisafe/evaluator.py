@@ -411,6 +411,9 @@ class Evaluator:  # pylint: disable=too-many-instance-attributes
             episode_costs.append(ep_cost)
             episode_lengths.append(length)
 
+            eval_folder = os.path.abspath(save_replay_path)
+            os.makedirs(eval_folder, exist_ok=True)
+
             with open(result_path, 'a+', encoding='utf-8') as f:
                 print(f'Episode {episode+1} results:')
                 print(f'Episode reward: {ep_ret}')
