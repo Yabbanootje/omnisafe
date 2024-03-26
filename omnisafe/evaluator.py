@@ -415,17 +415,17 @@ class Evaluator:  # pylint: disable=too-many-instance-attributes
             os.makedirs(eval_folder, exist_ok=True)
 
             with open(result_path, 'a+', encoding='utf-8') as f:
-                print(f'Episode {episode+1} results:')
-                print(f'Episode reward: {ep_ret}')
-                print(f'Episode cost: {ep_cost}')
-                print(f'Episode length: {length}')
+                print(f'Episode {episode+1} results:', file=f)
+                print(f'Episode reward: {ep_ret}', file=f)
+                print(f'Episode cost: {ep_cost}', file=f)
+                print(f'Episode length: {length}', file=f)
         
         with open(result_path, 'a+', encoding='utf-8') as f:
-            print(self._dividing_line)
-            print('Evaluation results:')
-            print(f'Average episode reward: {np.mean(a=episode_rewards)}')
-            print(f'Average episode cost: {np.mean(a=episode_costs)}')
-            print(f'Average episode length: {np.mean(a=episode_lengths)}')
+            print(self._dividing_line, file=f)
+            print('Evaluation results:', file=f)
+            print(f'Average episode reward: {np.mean(a=episode_rewards)}', file=f)
+            print(f'Average episode cost: {np.mean(a=episode_costs)}', file=f)
+            print(f'Average episode length: {np.mean(a=episode_lengths)}', file=f)
         return (
             episode_rewards,
             episode_costs,
