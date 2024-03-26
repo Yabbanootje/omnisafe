@@ -258,7 +258,10 @@ class AlgoWrapper:
         scan_dir = os.scandir(os.path.join(self.agent.logger.log_dir, 'torch_save'))
         for item in scan_dir:
             if item.is_file() and item.name.split('.')[-1] == 'pt':
-                if epochs_to_render == [] or item.name.split('.')[0].split('-')[-1] in epochs_to_render:
+                print("item.name", item.name)
+                print("item.name.split('.')", item.name.split('.'))
+                print("item.name.split('.')[0].split('-')[-1]", item.name.split('.')[0].split('-')[-1])
+                if epochs_to_render == [] or int(item.name.split('.')[0].split('-')[-1]) in epochs_to_render:
                     self._evaluator.load_saved(
                         save_dir=self.agent.logger.log_dir,
                         model_name=item.name,
