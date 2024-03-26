@@ -355,6 +355,12 @@ class Evaluator:  # pylint: disable=too-many-instance-attributes
             raise ValueError(
                 'The environment and the policy must be provided or created before evaluating the agent.',
             )
+        
+        save_replay_path = os.path.join(self._save_dir, 'evaluation', self._model_name.split('.')[0])
+        result_path = os.path.join(save_replay_path, 'result.txt')
+        print(self._dividing_line)
+        print(f'Saving the evaluation to {save_replay_path},\n and the result to {result_path}.')
+        print(self._dividing_line)
 
         episode_rewards: list[float] = []
         episode_costs: list[float] = []
@@ -405,16 +411,18 @@ class Evaluator:  # pylint: disable=too-many-instance-attributes
             episode_costs.append(ep_cost)
             episode_lengths.append(length)
 
-            print(f'Episode {episode+1} results:')
-            print(f'Episode reward: {ep_ret}')
-            print(f'Episode cost: {ep_cost}')
-            print(f'Episode length: {length}')
-
-        print(self._dividing_line)
-        print('Evaluation results:')
-        print(f'Average episode reward: {np.mean(a=episode_rewards)}')
-        print(f'Average episode cost: {np.mean(a=episode_costs)}')
-        print(f'Average episode length: {np.mean(a=episode_lengths)}')
+            with open(result_path, 'a+', encoding='utf-8') as f:
+                print(f'Episode {episode+1} results:')
+                print(f'Episode reward: {ep_ret}')
+                print(f'Episode cost: {ep_cost}')
+                print(f'Episode length: {length}')
+        
+        with open(result_path, 'a+', encoding='utf-8') as f:
+            print(self._dividing_line)
+            print('Evaluation results:')
+            print(f'Average episode reward: {np.mean(a=episode_rewards)}')
+            print(f'Average episode cost: {np.mean(a=episode_costs)}')
+            print(f'Average episode length: {np.mean(a=episode_lengths)}')
         return (
             episode_rewards,
             episode_costs,
