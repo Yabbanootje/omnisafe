@@ -257,7 +257,7 @@ class AlgoWrapper:
         assert self._evaluator is not None, 'Please run learn() first!'
         scan_dir = os.scandir(os.path.join(self.agent.logger.log_dir, 'torch_save'))
         for epoch in epochs_to_render:
-            assert epoch < len(scan_dir), f'Invalid epoch given: {epoch}'
+            assert epoch < len(list(scan_dir)), f'Invalid epoch given: {epoch}'
         for item in scan_dir:
             if item.is_file() and item.name.split('.')[-1] == 'pt':
                 if epochs_to_render == [] or item.name.split('.')[0].split('-')[-1] in epochs_to_render:
