@@ -367,7 +367,7 @@ class Evaluator:  # pylint: disable=too-many-instance-attributes
         episode_lengths: list[float] = []
 
         for episode in range(num_episodes):
-            obs, _ = self._env.reset()
+            obs, _ = self._env.reset(options={"resetting_for_eval": True})
             self._safety_obs = torch.ones(1)
             ep_ret, ep_cost, length = 0.0, 0.0, 0.0
 
@@ -481,7 +481,7 @@ class Evaluator:  # pylint: disable=too-many-instance-attributes
 
         horizon = 1000
         frames = []
-        obs, _ = self._env.reset(options={"resetting_for_render": True})
+        obs, _ = self._env.reset(options={"resetting_for_eval": True})
         if self._render_mode == 'human':
             self._env.render()
         elif self._render_mode == 'rgb_array':
