@@ -77,10 +77,15 @@ class OnPolicyAdapter(OnlineAdapter):
         """
         self._reset_log()
 
+        disable = False
+        if hasattr(self._env, "disable_progress"):
+            disable = self._env.disable_progress
+
         obs, _ = self.reset()
         for step in track(
             range(steps_per_epoch),
             description=f'Processing rollout for epoch: {logger.current_epoch}...',
+            disable=disable
         ):
             act, value_r, value_c, logp = agent.step(obs)
             next_obs, reward, cost, terminated, truncated, info = self.step(act)
