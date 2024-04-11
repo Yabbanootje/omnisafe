@@ -99,6 +99,7 @@ class ConstraintActorCritic(ActorCritic):
             value_c: The cost value of the observation.
             log_prob: The log probability of the action.
         """
+        print("ConstraintActorCritic:step:obs", obs.is_cuda)
         with torch.no_grad():
             value_r = self.reward_critic(obs)
             value_c = self.cost_critic(obs)
@@ -126,4 +127,5 @@ class ConstraintActorCritic(ActorCritic):
             value_c: The cost value of the observation.
             log_prob: The log probability of the action.
         """
+        print("ConstraintActorCritic:forward:obs", obs.is_cuda)
         return self.step(obs, deterministic=deterministic)
