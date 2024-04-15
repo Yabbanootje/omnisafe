@@ -161,7 +161,6 @@ class OnlineAdapter:
             truncated: Whether the episode has been truncated due to a time limit.
             info: Some information logged by the environment.
         """
-        print("OnlineAdapter:step:action", action.is_cuda)
         return self._env.step(action)
 
     def reset(
