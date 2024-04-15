@@ -139,7 +139,7 @@ class Logger:  # pylint: disable=too-many-instance-attributes
             print('project', project, 'name', name)
             wandb.init(project=project, name=name, dir=self._log_dir, config=config)
             if config is not None:
-                wandb.config.update(config)
+                wandb.config.update(config, allow_val_change=True)
             if models is not None:
                 for model in models:
                     wandb.watch(model)
