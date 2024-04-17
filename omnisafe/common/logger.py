@@ -380,7 +380,6 @@ class Logger:  # pylint: disable=too-many-instance-attributes
 
     def close(self) -> None:
         """Close the logger."""
-        print("closing logger...")
         if self._use_wandb:
             wandb.finish()
         if self._maste_proc:
