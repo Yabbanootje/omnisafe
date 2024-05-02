@@ -18,12 +18,16 @@ from __future__ import annotations
 
 import time
 from typing import Any
+import os
+import json
 
+import numpy as np
 import torch
 import torch.nn as nn
 from rich.progress import track
 from torch.nn.utils.clip_grad import clip_grad_norm_
 from torch.utils.data import DataLoader, TensorDataset
+from gymnasium.spaces import Box
 
 from omnisafe.adapter import OnPolicyAdapter
 from omnisafe.algorithms import registry
@@ -32,6 +36,13 @@ from omnisafe.common.buffer import VectorOnPolicyBuffer
 from omnisafe.common.logger import Logger
 from omnisafe.models.actor_critic.constraint_actor_critic import ConstraintActorCritic
 from omnisafe.utils import distributed
+from omnisafe.utils.config import Config
+from omnisafe.common import Normalizer
+from omnisafe.envs.core import CMDP, make
+from omnisafe.envs.wrapper import ActionRepeat, ActionScale, ObsNormalize, TimeLimit
+from omnisafe.models.actor import ActorBuilder
+from omnisafe.algorithms.model_based.base.ensemble import EnsembleDynamicsModel
+from omnisafe.models.actor_critic import ConstraintActorCritic, ConstraintActorQCritic
 
 
 @registry.register
@@ -568,3 +579,223 @@ class PolicyGradient(BaseAlgo):
             },
         )
         return loss
+    
+    # def __load_cfgs(self, save_dir: str) -> None:
+    #     """Load the config from the save directory.
+
+    #     Args:
+    #         save_dir (str): Directory where the model is saved.
+
+    #     Raises:
+    #         FileNotFoundError: If the config file is not found.
+    #     """
+    #     cfg_path = os.path.join(save_dir, 'config.json')
+    #     try:
+    #         with open(cfg_path, encoding='utf-8') as file:
+    #             kwargs = json.load(file)
+    #     except FileNotFoundError as error:
+    #         raise FileNotFoundError(
+    #             f'The config file is not found in the save directory{save_dir}.',
+    #         ) from error
+    #     self._cfgs = Config.dict2config(kwargs)
+
+    def __load_model_and_env(
+        self,
+        path: str,
+        # env_kwargs: dict[str, Any],
+        epoch: int,
+    ) -> None:
+        """Load the model from the save directory.
+
+        Args:
+            save_dir (str): Directory where the model is saved.
+            model_name (str): Name of the model.
+            env_kwargs (dict[str, Any]): Keyword arguments for the environment.
+
+        Raises:
+            FileNotFoundError: If the model is not found.
+        """
+        # load the saved model
+        model_path = os.path.join(path, 'torch_save', f'epoch-{epoch}.pt')
+        try:
+            model_params = torch.load(model_path)
+        except FileNotFoundError as error:
+            raise FileNotFoundError('The model is not found in the save directory.') from error
+
+        # load the environment
+        # TODO: this is probably not necessary, because this is a different kind of env and
+        # we can keep the env where maybe some minor tweaks need to be made
+        # self._env = make(**env_kwargs)
+
+        # observation_space = self._env.observation_space
+        # action_space = self._env.action_space
+        # if 'Saute' in self._cfgs['algo'] or 'Simmer' in self._cfgs['algo']:
+        #     self._safety_budget = (
+        #         self._cfgs.algo_cfgs.safety_budget
+        #         * (1 - self._cfgs.algo_cfgs.saute_gamma**self._cfgs.algo_cfgs.max_ep_len)
+        #         / (1 - self._cfgs.algo_cfgs.saute_gamma)
+        #         / self._cfgs.algo_cfgs.max_ep_len
+        #         * torch.ones(1)
+        #     )
+        # assert isinstance(observation_space, Box), 'The observation space must be Box.'
+        # assert isinstance(action_space, Box), 'The action space must be Box.'
+
+        # if self._cfgs['algo_cfgs']['obs_normalize']:
+        #     obs_normalizer = Normalizer(shape=observation_space.shape, clip=5)
+        #     obs_normalizer.load_state_dict(model_params['obs_normalizer'])
+        #     self._env = ObsNormalize(self._env, device=torch.device('cpu'), norm=obs_normalizer)
+        # if self._env.need_time_limit_wrapper:
+        #     self._env = TimeLimit(self._env, device=torch.device('cpu'), time_limit=1000)
+        # self._env = ActionScale(self._env, device=torch.device('cpu'), low=-1.0, high=1.0)
+
+        # if hasattr(self._cfgs['algo_cfgs'], 'action_repeat'):
+        #     self._env = ActionRepeat(
+        #         self._env,
+        #         device=torch.device('cpu'),
+        #         times=self._cfgs['algo_cfgs']['action_repeat'],
+        #     )
+        # if hasattr(self._cfgs, 'algo') and self._cfgs['algo'] in [
+        #     'LOOP',
+        #     'SafeLOOP',
+        #     'PETS',
+        #     'CAPPETS',
+        #     'RCEPETS',
+        #     'CCEPETS',
+        # ]:
+        #     dynamics_state_space = (
+        #         self._env.coordinate_observation_space
+        #         if self._env.coordinate_observation_space is not None
+        #         else self._env.observation_space
+        #     )
+        #     assert self._env.action_space is not None and isinstance(
+        #         self._env.action_space.shape,
+        #         tuple,
+        #     )
+        #     if isinstance(self._env.action_space, Box):
+        #         action_space = self._env.action_space
+        #     else:
+        #         raise NotImplementedError
+        #     if self._cfgs['algo'] in ['LOOP', 'SafeLOOP']:
+        #         self._actor_critic = ConstraintActorQCritic(
+        #             obs_space=dynamics_state_space,
+        #             act_space=action_space,
+        #             model_cfgs=self._cfgs.model_cfgs,
+        #             epochs=1,
+        #         )
+        #     if self._actor_critic is not None:
+        print(f"actor_critic is {self._actor_critic}")
+        print(f"model_params in policy gradient are {model_params}, {model_params['actor_critic']}")
+        self._actor_critic.load_state_dict(model_params['actor_critic'])
+        print(f"actor_critic becomes {self._actor_critic}")
+                # self._actor_critic.to('cpu')
+            # self._dynamics = EnsembleDynamicsModel(
+            #     model_cfgs=self._cfgs.dynamics_cfgs,
+            #     device=torch.device('cpu'),
+            #     state_shape=dynamics_state_space.shape,
+            #     action_shape=action_space.shape,
+            #     actor_critic=self._actor_critic,
+            #     rew_func=None,
+            #     cost_func=self._env.get_cost_from_obs_tensor,
+            #     terminal_func=None,
+            # )
+            # self._dynamics.ensemble_model.load_state_dict(model_params['dynamics'])
+            # self._dynamics.ensemble_model.to('cpu')
+        #     if self._cfgs['algo'] in ['CCEPETS', 'RCEPETS', 'SafeLOOP']:
+        #         algo_to_planner = {
+        #             'CCEPETS': (
+        #                 'CCEPlanner',
+        #                 {'cost_limit': self._cfgs['algo_cfgs']['cost_limit']},
+        #             ),
+        #             'RCEPETS': (
+        #                 'RCEPlanner',
+        #                 {'cost_limit': self._cfgs['algo_cfgs']['cost_limit']},
+        #             ),
+        #             'SafeLOOP': (
+        #                 'SafeARCPlanner',
+        #                 {
+        #                     'cost_limit': self._cfgs['algo_cfgs']['cost_limit'],
+        #                     'actor_critic': self._actor_critic,
+        #                 },
+        #             ),
+        #         }
+        #     elif self._cfgs['algo'] in ['PETS', 'LOOP']:
+        #         algo_to_planner = {
+        #             'PETS': ('CEMPlanner', {}),
+        #             'LOOP': ('ARCPlanner', {'actor_critic': self._actor_critic}),
+        #         }
+        #     elif self._cfgs['algo'] in ['CAPPETS']:
+        #         lagrange: torch.nn.Parameter = torch.nn.Parameter(
+        #             model_params['lagrangian_multiplier'].to('cpu'),
+        #             requires_grad=False,
+        #         )
+        #         algo_to_planner = {
+        #             'CAPPETS': (
+        #                 'CAPPlanner',
+        #                 {
+        #                     'cost_limit': self._cfgs['lagrange_cfgs']['cost_limit'],
+        #                     'lagrange': lagrange,
+        #                 },
+        #             ),
+        #         }
+        #     planner_name = algo_to_planner[self._cfgs['algo']][0]
+        #     planner_special_cfgs = algo_to_planner[self._cfgs['algo']][1]
+        #     planner_cls = globals()[f'{planner_name}']
+        #     self._planner = planner_cls(
+        #         dynamics=self._dynamics,
+        #         planner_cfgs=self._cfgs.planner_cfgs,
+        #         gamma=float(self._cfgs.algo_cfgs.gamma),
+        #         cost_gamma=float(self._cfgs.algo_cfgs.cost_gamma),
+        #         dynamics_state_shape=dynamics_state_space.shape,
+        #         action_shape=action_space.shape,
+        #         action_max=1.0,
+        #         action_min=-1.0,
+        #         device='cpu',
+        #         **planner_special_cfgs,
+        #     )
+
+        # else:
+        #     if 'Saute' in self._cfgs['algo'] or 'Simmer' in self._cfgs['algo']:
+        #         observation_space = Box(
+        #             low=np.hstack((observation_space.low, -np.inf)),
+        #             high=np.hstack((observation_space.high, np.inf)),
+        #             shape=(observation_space.shape[0] + 1,),
+        #         )
+        #     actor_type = self._cfgs['model_cfgs']['actor_type']
+        #     pi_cfg = self._cfgs['model_cfgs']['actor']
+        #     weight_initialization_mode = self._cfgs['model_cfgs']['weight_initialization_mode']
+        #     actor_builder = ActorBuilder(
+        #         obs_space=observation_space,
+        #         act_space=action_space,
+        #         hidden_sizes=pi_cfg['hidden_sizes'],
+        #         activation=pi_cfg['activation'],
+        #         weight_initialization_mode=weight_initialization_mode,
+        #     )
+        #     self._actor = actor_builder.build_actor(actor_type)
+        #     self._actor.load_state_dict(model_params['pi'])
+
+    def load(self, epoch, path) -> None:
+        """Load a saved model.
+
+        Args:
+            save_dir (str): The directory where the model is saved.
+            model_name (str): The name of the model.
+            render_mode (str, optional): The render mode, ranging from 'human', 'rgb_array',
+                'rgb_array_list'. Defaults to 'rgb_array'.
+            camera_name (str or None, optional): The name of the camera. Defaults to None.
+            camera_id (int or None, optional): The id of the camera. Defaults to None.
+            width (int, optional): The width of the image. Defaults to 256.
+            height (int, optional): The height of the image. Defaults to 256.
+        """
+        # self.__load_cfgs(path)
+
+        # env_kwargs = {
+        #     'env_id': self._env_id,
+        # }
+
+        print(f"Path {path} and epoch {epoch} in PolicyGradient")
+
+        self.__load_model_and_env(path, epoch)
+
+        self._logger.set_current_epoch(epoch)
+
+        self._logger.copy_from_csv(os.path.join(path, "progress.csv"))

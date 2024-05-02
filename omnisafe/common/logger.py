@@ -24,6 +24,7 @@ from collections import deque
 from typing import Any, TextIO
 
 import numpy as np
+import pandas as pd
 import torch
 import wandb
 from rich import print  # pylint: disable=redefined-builtin,wrong-import-order
@@ -301,6 +302,7 @@ class Logger:  # pylint: disable=too-many-instance-attributes
             if self._first_row:
                 self._csv_writer.writerow(self._current_row.keys())
                 self._first_row = False
+            print(f"a normal row in logger looks like {self._current_row.values()}")
             self._csv_writer.writerow(self._current_row.values())
             self._output_file.flush()
 
@@ -373,6 +375,10 @@ class Logger:  # pylint: disable=too-many-instance-attributes
         """Return the current epoch."""
         return self._epoch
 
+    def set_current_epoch(self, epoch) -> None:
+        """Set the current epoch."""
+        self._epoch = epoch
+
     @property
     def log_dir(self) -> str:
         """Return the log directory."""
@@ -384,3 +390,13 @@ class Logger:  # pylint: disable=too-many-instance-attributes
             wandb.finish()
         if self._maste_proc:
             self._output_file.close()
+
+    def copy_from_csv(self, path_to_input_csv) -> None:
+        print(f"path_to_input_csv in logger is {path_to_input_csv}")
+        csv_df = pd.read_csv(path_to_input_csv)
+        print(f"csv_df is {csv_df}")
+        up_to_epoch_df = csv_df[csv_df["Train/Epoch"] < self._epoch]
+        print(f"up_to_epoch_df is {up_to_epoch_df}")
+        for index, row in up_to_epoch_df.iterrows():
+            print(f"a row in up_to_epoch_df looks like {row}")
+            self._csv_writer.writerow(list(row))
