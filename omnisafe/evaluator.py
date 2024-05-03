@@ -204,6 +204,7 @@ class Evaluator:  # pylint: disable=too-many-instance-attributes
                     epochs=1,
                 )
             if self._actor_critic is not None:
+                print(f"model_params in evaluator {model_params}")
                 self._actor_critic.load_state_dict(model_params['actor_critic'])
                 self._actor_critic.to('cpu')
             self._dynamics = EnsembleDynamicsModel(

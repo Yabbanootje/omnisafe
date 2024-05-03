@@ -686,7 +686,7 @@ class PolicyGradient(BaseAlgo):
         #     if self._actor_critic is not None:
         print(f"actor_critic is {self._actor_critic}")
         print(f"model_params in policy gradient are {model_params}")
-        print(f"model_params in policy gradient are for actor_critic are {model_params['actor_critic']}")
+        # print(f"model_params in policy gradient are for actor_critic are {model_params['actor_critic']}")
         self._actor_critic.load_state_dict(model_params['actor_critic'])
         print(f"actor_critic becomes {self._actor_critic}")
                 # self._actor_critic.to('cpu')
