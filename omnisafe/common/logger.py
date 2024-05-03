@@ -392,6 +392,9 @@ class Logger:  # pylint: disable=too-many-instance-attributes
             self._output_file.close()
 
     def copy_from_csv(self, path_to_input_csv) -> None:
+        if self._first_row:
+            self._csv_writer.writerow(self._current_row.keys())
+            self._first_row = False
         print(f"path_to_input_csv in logger is {path_to_input_csv}")
         csv_df = pd.read_csv(path_to_input_csv)
         print(f"csv_df is {csv_df}")
