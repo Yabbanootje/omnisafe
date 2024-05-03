@@ -628,8 +628,8 @@ class PolicyGradient(BaseAlgo):
         # we can keep the env where maybe some minor tweaks need to be made
         # self._env = make(**env_kwargs)
 
-        # observation_space = self._env.observation_space
-        # action_space = self._env.action_space
+        observation_space = self._env.observation_space
+        action_space = self._env.action_space
         # if 'Saute' in self._cfgs['algo'] or 'Simmer' in self._cfgs['algo']:
         #     self._safety_budget = (
         #         self._cfgs.algo_cfgs.safety_budget
@@ -684,11 +684,8 @@ class PolicyGradient(BaseAlgo):
         #             epochs=1,
         #         )
         #     if self._actor_critic is not None:
-        print(f"actor_critic is {self._actor_critic}")
-        print(f"model_params in policy gradient are {model_params}")
         # print(f"model_params in policy gradient are for actor_critic are {model_params['actor_critic']}")
-        self._actor_critic.load_state_dict(model_params['actor_critic'])
-        print(f"actor_critic becomes {self._actor_critic}")
+                # self._actor_critic.load_state_dict(model_params['actor_critic'])
                 # self._actor_critic.to('cpu')
             # self._dynamics = EnsembleDynamicsModel(
             #     model_cfgs=self._cfgs.dynamics_cfgs,
@@ -762,18 +759,21 @@ class PolicyGradient(BaseAlgo):
         #             high=np.hstack((observation_space.high, np.inf)),
         #             shape=(observation_space.shape[0] + 1,),
         #         )
-        #     actor_type = self._cfgs['model_cfgs']['actor_type']
-        #     pi_cfg = self._cfgs['model_cfgs']['actor']
-        #     weight_initialization_mode = self._cfgs['model_cfgs']['weight_initialization_mode']
-        #     actor_builder = ActorBuilder(
-        #         obs_space=observation_space,
-        #         act_space=action_space,
-        #         hidden_sizes=pi_cfg['hidden_sizes'],
-        #         activation=pi_cfg['activation'],
-        #         weight_initialization_mode=weight_initialization_mode,
-        #     )
-        #     self._actor = actor_builder.build_actor(actor_type)
-        #     self._actor.load_state_dict(model_params['pi'])
+        actor_type = self._cfgs['model_cfgs']['actor_type']
+        pi_cfg = self._cfgs['model_cfgs']['actor']
+        weight_initialization_mode = self._cfgs['model_cfgs']['weight_initialization_mode']
+        actor_builder = ActorBuilder(
+            obs_space=observation_space,
+            act_space=action_space,
+            hidden_sizes=pi_cfg['hidden_sizes'],
+            activation=pi_cfg['activation'],
+            weight_initialization_mode=weight_initialization_mode,
+        )
+        self._actor = actor_builder.build_actor(actor_type)
+        print(f"actor_critic is {self._actor_critic}")
+        print(f"model_params in policy gradient are {model_params}")
+        self._actor.load_state_dict(model_params['pi'])
+        print(f"actor_critic becomes {self._actor_critic}")
 
     def load(self, epoch, path) -> None:
         """Load a saved model.

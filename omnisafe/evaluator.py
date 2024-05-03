@@ -183,6 +183,7 @@ class Evaluator:  # pylint: disable=too-many-instance-attributes
             'RCEPETS',
             'CCEPETS',
         ]:
+            print("In the if part of evaluator")
             dynamics_state_space = (
                 self._env.coordinate_observation_space
                 if self._env.coordinate_observation_space is not None
@@ -273,6 +274,7 @@ class Evaluator:  # pylint: disable=too-many-instance-attributes
             )
 
         else:
+            print("In the else part of evaluator")
             if 'Saute' in self._cfgs['algo'] or 'Simmer' in self._cfgs['algo']:
                 observation_space = Box(
                     low=np.hstack((observation_space.low, -np.inf)),
@@ -290,6 +292,7 @@ class Evaluator:  # pylint: disable=too-many-instance-attributes
                 weight_initialization_mode=weight_initialization_mode,
             )
             self._actor = actor_builder.build_actor(actor_type)
+            print(f"model_params in evaluator {model_params}")
             self._actor.load_state_dict(model_params['pi'])
 
     # pylint: disable-next=too-many-locals
