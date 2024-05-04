@@ -798,6 +798,8 @@ class PolicyGradient(BaseAlgo):
 
         self.__load_model_and_env(path, epoch)
 
+        print(f"setting current epoch to {epoch}")
         self._logger.set_current_epoch(epoch)
+        print(f"epoch has been set to {self._logger._epoch}")
 
         self._logger.copy_from_csv(os.path.join(path, "progress.csv"))

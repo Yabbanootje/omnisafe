@@ -93,6 +93,7 @@ class Logger:  # pylint: disable=too-many-instance-attributes
         models: list[torch.nn.Module] | None = None,
     ) -> None:
         """Initialize an instance of :class:`Logger`."""
+        print("Initialized a new logger")
         hms_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
         relpath = hms_time
 
@@ -302,7 +303,6 @@ class Logger:  # pylint: disable=too-many-instance-attributes
             if self._first_row:
                 self._csv_writer.writerow(self._current_row.keys())
                 self._first_row = False
-            print(f"a normal row in logger looks like {self._current_row.values()}")
             self._csv_writer.writerow(self._current_row.values())
             self._output_file.flush()
 
