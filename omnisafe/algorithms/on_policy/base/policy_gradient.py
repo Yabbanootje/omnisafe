@@ -203,6 +203,8 @@ class PolicyGradient(BaseAlgo):
         self._logger.register_key('Metrics/EpCost', window_length=50)
         self._logger.register_key('Metrics/EpLen', window_length=50)
 
+        self._start_epoch = 0
+
         self._logger.register_key('Train/Epoch')
         self._logger.register_key('Train/Entropy')
         self._logger.register_key('Train/KL')
@@ -250,7 +252,7 @@ class PolicyGradient(BaseAlgo):
         start_time = time.time()
         self._logger.log('INFO: Start training')
 
-        for epoch in range(self._cfgs.train_cfgs.epochs):
+        for epoch in range(self._start_epoch, self._cfgs.train_cfgs.epochs):
             epoch_time = time.time()
 
             rollout_time = time.time()
@@ -798,8 +800,7 @@ class PolicyGradient(BaseAlgo):
 
         self.__load_model_and_env(path, epoch)
 
-        print(f"setting current epoch to {epoch}")
+        self._start_epoch = epoch
         self._logger.set_current_epoch(epoch)
-        print(f"epoch has been set to {self._logger._epoch}")
 
         self._logger.copy_from_csv(os.path.join(path, "progress.csv"))
