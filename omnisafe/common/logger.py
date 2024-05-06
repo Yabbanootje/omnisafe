@@ -93,7 +93,6 @@ class Logger:  # pylint: disable=too-many-instance-attributes
         models: list[torch.nn.Module] | None = None,
     ) -> None:
         """Initialize an instance of :class:`Logger`."""
-        print("Initialized a new logger")
         hms_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
         relpath = hms_time
 
@@ -392,14 +391,14 @@ class Logger:  # pylint: disable=too-many-instance-attributes
             self._output_file.close()
 
     def copy_from_csv(self, path_to_input_csv) -> None:
+        """Copy progress from a progress.csv file"""
+        # First write the column names
         if self._first_row:
             self._csv_writer.writerow(self._current_row.keys())
             self._first_row = False
-        print(f"path_to_input_csv in logger is {path_to_input_csv}")
+
+        # Read .csv file and copy it into the current .csv file
         csv_df = pd.read_csv(path_to_input_csv)
-        print(f"csv_df is {csv_df}")
         up_to_epoch_df = csv_df[csv_df["Train/Epoch"] < self._epoch]
-        print(f"up_to_epoch_df is {up_to_epoch_df}")
         for index, row in up_to_epoch_df.iterrows():
-            print(f"a row in up_to_epoch_df looks like {row}")
             self._csv_writer.writerow(list(row))
