@@ -398,11 +398,11 @@ class Evaluator:  # pylint: disable=too-many-instance-attributes
 
                 ep_ret += rew.item()
                 ep_cost += (cost_criteria**length) * cost.item()
-                if (
-                    'EarlyTerminated' in self._cfgs['algo']
-                    and ep_cost >= self._cfgs.algo_cfgs.cost_limit
-                ):
-                    terminated = torch.as_tensor(True)
+                # if (
+                #     'EarlyTerminated' in self._cfgs['algo']
+                #     and ep_cost >= self._cfgs.algo_cfgs.cost_limit
+                # ):
+                #     terminated = torch.as_tensor(True)
                 length += 1
 
                 done = bool(terminated or truncated)
@@ -525,11 +525,11 @@ class Evaluator:  # pylint: disable=too-many-instance-attributes
                 done = bool(terminated or truncated)
                 ep_ret += rew.item()
                 ep_cost += (cost_criteria**length) * cost.item()
-                if (
-                    'EarlyTerminated' in self._cfgs['algo']
-                    and ep_cost >= self._cfgs.algo_cfgs.cost_limit
-                ):
-                    terminated = torch.as_tensor(True)
+                # if (
+                #     'EarlyTerminated' in self._cfgs['algo']
+                #     and ep_cost >= self._cfgs.algo_cfgs.cost_limit
+                # ):
+                #     terminated = torch.as_tensor(True)
                 length += 1
 
                 if self._render_mode == 'rgb_array':
