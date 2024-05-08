@@ -628,7 +628,7 @@ class PolicyGradient(BaseAlgo):
             epoch (int): The epoch to be loaded.
             path (str): The path to the saved model that should be loaded.
         """
-        self.__load_model_and_env(path, epoch)
+        self.__load_model_and_env(epoch=epoch, path=path)
 
         self._start_epoch = epoch
         self._logger.set_current_epoch(epoch)
