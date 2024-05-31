@@ -20,5 +20,6 @@ from omnisafe.adapter.offline_adapter import OfflineAdapter
 from omnisafe.adapter.offpolicy_adapter import OffPolicyAdapter
 from omnisafe.adapter.online_adapter import OnlineAdapter
 from omnisafe.adapter.onpolicy_adapter import OnPolicyAdapter
+from omnisafe.adapter.onpolicy_adaptive_curriculum_adapter import OnPolicyAdaptiveCurriculumAdapter
 from omnisafe.adapter.saute_adapter import SauteAdapter
 from omnisafe.adapter.simmer_adapter import SimmerAdapter

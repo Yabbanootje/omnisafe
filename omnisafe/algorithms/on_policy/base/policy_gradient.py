@@ -22,6 +22,7 @@ import os
 import json
 
 import numpy as np
+import re
 import torch
 import torch.nn as nn
 from rich.progress import track
@@ -29,7 +30,7 @@ from torch.nn.utils.clip_grad import clip_grad_norm_
 from torch.utils.data import DataLoader, TensorDataset
 from gymnasium.spaces import Box
 
-from omnisafe.adapter import OnPolicyAdapter
+from omnisafe.adapter import OnPolicyAdapter, OnPolicyAdaptiveCurriculumAdapter
 from omnisafe.algorithms import registry
 from omnisafe.algorithms.base_algo import BaseAlgo
 from omnisafe.common.buffer import VectorOnPolicyBuffer
@@ -72,12 +73,20 @@ class PolicyGradient(BaseAlgo):
             AssertionError: If the number of steps per epoch is not divisible by the number of
                 environments.
         """
-        self._env: OnPolicyAdapter = OnPolicyAdapter(
-            self._env_id,
-            self._cfgs.train_cfgs.vector_env_nums,
-            self._seed,
-            self._cfgs,
-        )
+        if re.search(r"From(\d+|T)HMA(\d+|T)", self._env_id) is not None:
+            self._env: OnPolicyAdaptiveCurriculumAdapter = OnPolicyAdaptiveCurriculumAdapter(
+                self._env_id,
+                self._cfgs.train_cfgs.vector_env_nums,
+                self._seed,
+                self._cfgs,
+            )
+        else:
+            self._env: OnPolicyAdapter = OnPolicyAdapter(
+                self._env_id,
+                self._cfgs.train_cfgs.vector_env_nums,
+                self._seed,
+                self._cfgs,
+            )
         assert (self._cfgs.algo_cfgs.steps_per_epoch) % (
             distributed.world_size() * self._cfgs.train_cfgs.vector_env_nums
         ) == 0, 'The number of steps per epoch is not divisible by the number of environments.'
