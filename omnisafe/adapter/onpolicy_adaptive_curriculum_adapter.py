@@ -41,6 +41,8 @@ class OnPolicyAdaptiveCurriculumAdapter(OnPolicyAdapter):
 
         obs, _ = self.reset()
         start_obs = obs.clone().detach()
+        completed_task = False
+
         for step in track(
             range(steps_per_epoch),
             description=f'Processing rollout for epoch: {logger.current_epoch}...',
@@ -92,10 +94,14 @@ class OnPolicyAdaptiveCurriculumAdapter(OnPolicyAdapter):
                         self._ep_cost[idx] = 0.0
                         self._ep_len[idx] = 0.0
 
+                    if done:
+                        completed_task = True
+
                     buffer.finish_path(last_value_r, last_value_c, idx)
 
 
-        action, value_r, value_c, log_prob = agent.forward(start_obs)
+        # action, value_r, value_c, log_prob = agent.forward(start_obs)
+        # print(f"The observation {start_obs}\n leads to action: {action},\n value_r: {value_r}, \n value_c: {value_c} and \n log_prob: {log_prob}")
         print("In OnPolicyAdaptiveCurriculumAdapter we have:", type(self._env).__name__)
-        print(f"The observation {start_obs}\n leads to action: {action},\n value_r: {value_r}, \n value_c: {value_c} and \n log_prob: {log_prob}")
-        self._env.update(value_r)
+        print(f"The task at current epoch is {"not" if not completed_task else ""} completed and according to the logger the costs are {logger.get_stats("Metrics/EpCost")[0]}")
+        self._env.update((completed_task, logger.get_stats("Metrics/EpCost")[0]))
