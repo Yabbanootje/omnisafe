@@ -103,5 +103,5 @@ class OnPolicyAdaptiveCurriculumAdapter(OnPolicyAdapter):
         # action, value_r, value_c, log_prob = agent.forward(start_obs)
         # print(f"The observation {start_obs}\n leads to action: {action},\n value_r: {value_r}, \n value_c: {value_c} and \n log_prob: {log_prob}")
         print("In OnPolicyAdaptiveCurriculumAdapter we have:", type(self._env).__name__)
-        print(f"The task at current epoch is {'not' if not completed_task else ''} completed and according to the logger the costs are {logger.get_stats("Metrics/EpCost")[0]}")
+        print(f"The task at current epoch is {'not' if not completed_task else ''} completed and according to the logger the costs are {logger.get_stats('Metrics/EpCost')[0]}")
         self._env.update((completed_task, logger.get_stats("Metrics/EpCost")[0]))
