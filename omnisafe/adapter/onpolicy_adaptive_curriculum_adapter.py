@@ -42,8 +42,9 @@ class OnPolicyAdaptiveCurriculumAdapter(OnPolicyAdapter):
 
         obs, info = self.reset()
         self._current_task = info['current_task']
-        # start_obs = obs.clone().detach()
-        completed_task = False
+        start_obs = obs.clone().detach()
+        done_task = False
+        time_out_task = False
 
         for step in track(
             range(steps_per_epoch),
@@ -97,16 +98,31 @@ class OnPolicyAdaptiveCurriculumAdapter(OnPolicyAdapter):
                         self._ep_len[idx] = 0.0
 
                     if done:
-                        completed_task = True
+                        done_task = True
+
+                    if time_out:
+                        time_out_task = True
 
                     buffer.finish_path(last_value_r, last_value_c, idx)
 
 
-        # action, value_r, value_c, log_prob = agent.forward(start_obs)
+        action, value_r, value_c, log_prob = agent.forward(start_obs)
         # print(f"The observation {start_obs}\n leads to action: {action},\n value_r: {value_r}, \n value_c: {value_c} and \n log_prob: {log_prob}")
         print("In OnPolicyAdaptiveCurriculumAdapter we have:", type(self._env).__name__)
-        print(f"The task at current epoch is {'not' if not completed_task else ''} completed and according to the logger the costs are {logger.get_stats('Metrics/EpCost')[0]}")
-        self._env.update((completed_task, logger.get_stats("Metrics/EpCost")[0]))
+        print(f"The task at current epoch is{' not' if not done_task else ''} completed and according to the logger the costs are {logger.get_stats('Metrics/EpCost')[0]}")
+        metric_dict = {
+            "action": action,
+            "value_r": value_r,
+            "value_c": value_c,
+            "log_prob": log_prob,
+            "start_obs": start_obs,
+            "done_task": done_task,
+            "time_out_task": time_out_task,
+            "Metrics/EpRet": logger.get_stats("Metrics/EpRet")[0],
+            "Metrics/EpCost": logger.get_stats("Metrics/EpCost")[0],
+            "Metrics/EpLen": logger.get_stats("Metrics/EpLen")[0],
+        }
+        self._env.update(metric_dict)
 
     def _log_metrics(self, logger: Logger, idx: int) -> None:
         """Log metrics, including ``EpRet``, ``EpCost``, ``EpLen``.

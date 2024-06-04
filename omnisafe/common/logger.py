@@ -268,7 +268,7 @@ class Logger:  # pylint: disable=too-many-instance-attributes
             kwargs.update(data)
         for key, val in kwargs.items():
             assert key in self._current_row, f'Key {key} has not been registered'
-            if isinstance(val, (int, float, str)):
+            if isinstance(val, (int, float)):
                 self._data[key].append(val)
             elif isinstance(val, torch.Tensor):
                 self._data[key].append(val.mean().item())

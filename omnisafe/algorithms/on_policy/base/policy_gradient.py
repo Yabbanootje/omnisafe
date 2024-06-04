@@ -208,6 +208,9 @@ class PolicyGradient(BaseAlgo):
         self._logger.setup_torch_saver(what_to_save)
         self._logger.torch_save()
 
+        if re.search(r"From(\d+|T)HMA(\d+|T)", self._env_id) is not None:
+            self._logger.register_key('Current_task')
+
         self._logger.register_key('Metrics/EpRet', window_length=50)
         self._logger.register_key('Metrics/EpCost', window_length=50)
         self._logger.register_key('Metrics/EpLen', window_length=50)
@@ -243,9 +246,6 @@ class PolicyGradient(BaseAlgo):
         self._logger.register_key('Time/Update')
         self._logger.register_key('Time/Epoch')
         self._logger.register_key('Time/FPS')
-
-        if re.search(r"From(\d+|T)HMA(\d+|T)", self._env_id) is not None:
-            self._logger.register_key('Current_task')
 
     def learn(self) -> tuple[float, float, float]:
         """This is main function for algorithm update.
