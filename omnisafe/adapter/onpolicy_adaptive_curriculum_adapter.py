@@ -12,6 +12,7 @@ class OnPolicyAdaptiveCurriculumAdapter(OnPolicyAdapter):
         """Initialize an instance of :class:`OnPolicyCurriculumAdapter`."""
         super().__init__(env_id, num_envs, seed, cfgs)
         print("initialized an OnPolicyAdaptiveCurriculumAdapter")
+        # self._current_task = self._env.current_task
 
     def rollout(  # pylint: disable=too-many-locals
         self,
@@ -39,8 +40,9 @@ class OnPolicyAdaptiveCurriculumAdapter(OnPolicyAdapter):
         # if hasattr(self._env, "disable_progress"):
         #     disable = self._env.disable_progress
 
-        obs, _ = self.reset()
-        start_obs = obs.clone().detach()
+        obs, info = self.reset()
+        self._current_task = info['current_task']
+        # start_obs = obs.clone().detach()
         completed_task = False
 
         for step in track(
@@ -105,3 +107,19 @@ class OnPolicyAdaptiveCurriculumAdapter(OnPolicyAdapter):
         print("In OnPolicyAdaptiveCurriculumAdapter we have:", type(self._env).__name__)
         print(f"The task at current epoch is {'not' if not completed_task else ''} completed and according to the logger the costs are {logger.get_stats('Metrics/EpCost')[0]}")
         self._env.update((completed_task, logger.get_stats("Metrics/EpCost")[0]))
+
+    def _log_metrics(self, logger: Logger, idx: int) -> None:
+        """Log metrics, including ``EpRet``, ``EpCost``, ``EpLen``.
+
+        Args:
+            logger (Logger): Logger, to log ``EpRet``, ``EpCost``, ``EpLen``.
+            idx (int): The index of the environment.
+        """
+        logger.store(
+            {
+                'Metrics/EpRet': self._ep_ret[idx],
+                'Metrics/EpCost': self._ep_cost[idx],
+                'Metrics/EpLen': self._ep_len[idx],
+                'Current_task': self._current_task,
+            },
+        )

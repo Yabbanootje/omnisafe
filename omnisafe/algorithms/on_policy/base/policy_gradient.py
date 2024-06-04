@@ -244,6 +244,9 @@ class PolicyGradient(BaseAlgo):
         self._logger.register_key('Time/Epoch')
         self._logger.register_key('Time/FPS')
 
+        if re.search(r"From(\d+|T)HMA(\d+|T)", self._env_id) is not None:
+            self._logger.register_key('Current_task')
+
     def learn(self) -> tuple[float, float, float]:
         """This is main function for algorithm update.
 
