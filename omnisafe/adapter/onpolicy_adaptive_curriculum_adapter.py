@@ -121,6 +121,8 @@ class OnPolicyAdaptiveCurriculumAdapter(OnPolicyAdapter):
             "Metrics/EpRet": logger.get_stats("Metrics/EpRet")[0],
             "Metrics/EpCost": logger.get_stats("Metrics/EpCost")[0],
             "Metrics/EpLen": logger.get_stats("Metrics/EpLen")[0],
+            "Value/reward": logger.get_stats("Value/reward")[0],
+            "Value/cost": logger.get_stats("Value/cost")[0],
         }
         self._env.update(metric_dict)
 
