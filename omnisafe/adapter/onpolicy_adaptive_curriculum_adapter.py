@@ -10,10 +10,14 @@ class OnPolicyAdaptiveCurriculumAdapter(OnPolicyAdapter):
         cfgs: Config,
     ) -> None:
         """Initialize an instance of :class:`OnPolicyCurriculumAdapter`."""
+        beta = cfgs["env_cfgs"]["beta"]
+        kappa = cfgs["env_cfgs"]["kappa"]
+        cfgs["env_cfgs"] = {}
+        print("It has updated OMG!!!!!1!!")
         super().__init__(env_id, num_envs, seed, cfgs)
         print("initialized an OnPolicyAdaptiveCurriculumAdapter with cfgs:", cfgs)
-        self._env.set_beta(self._cfgs["env_cfgs"]["beta"])
-        self._env.set_kappa(self._cfgs["env_cfgs"]["kappa"])
+        self._env.set_beta(beta)
+        self._env.set_kappa(kappa)
         # self._current_task = self._env.current_task
 
     def rollout(  # pylint: disable=too-many-locals
