@@ -13,7 +13,6 @@ class OnPolicyAdaptiveCurriculumAdapter(OnPolicyAdapter):
         beta = cfgs["env_cfgs"]["beta"]
         kappa = cfgs["env_cfgs"]["kappa"]
         cfgs["env_cfgs"] = {}
-        print("It has updated OMG!!!!!1!!")
         super().__init__(env_id, num_envs, seed, cfgs)
         print("initialized an OnPolicyAdaptiveCurriculumAdapter with cfgs:", cfgs)
         self._env.set_beta(beta)
