@@ -11,7 +11,9 @@ class OnPolicyAdaptiveCurriculumAdapter(OnPolicyAdapter):
     ) -> None:
         """Initialize an instance of :class:`OnPolicyCurriculumAdapter`."""
         super().__init__(env_id, num_envs, seed, cfgs)
-        print("initialized an OnPolicyAdaptiveCurriculumAdapter")
+        print("initialized an OnPolicyAdaptiveCurriculumAdapter with cfgs:", cfgs)
+        self._env.set_beta(self._cfgs["env_cfgs"]["beta"])
+        self._env.set_kappa(self._cfgs["env_cfgs"]["kappa"])
         # self._current_task = self._env.current_task
 
     def rollout(  # pylint: disable=too-many-locals
