@@ -28,10 +28,10 @@ from omnisafe.typing import OmnisafeSpace
 
 
 @env_register
-class SimpleEnv(CMDP):
+class TestEnv(CMDP):
     """Simplest environment for testing."""
 
-    _support_envs: ClassVar[list[str]] = ['Simple-v0']
+    _support_envs: ClassVar[list[str]] = ['Test-v0']
     metadata: ClassVar[dict[str, int]] = {'render_fps': 30}
     need_auto_reset_wrapper = True
     need_time_limit_wrapper = True
@@ -61,8 +61,13 @@ class SimpleEnv(CMDP):
         reward = 10000 * torch.as_tensor(random.random())
         cost = 10000 * torch.as_tensor(random.random())
         terminated = torch.as_tensor(random.random() > 0.9)
-        truncated = torch.as_tensor(self._count > 10)
+        truncated = torch.as_tensor(self._count > self.max_episode_steps)
         return obs, reward, cost, terminated, truncated, {'final_observation': obs}
+
+    @property
+    def max_episode_steps(self) -> int:
+        """The max steps per episode."""
+        return 10
 
     def reset(
         self,
@@ -77,9 +82,6 @@ class SimpleEnv(CMDP):
 
     def set_seed(self, seed: int) -> None:
         random.seed(seed)
-
-    def sample_action(self) -> torch.Tensor:
-        return torch.as_tensor(self._action_space.sample())
 
     def render(self) -> Any:
         return np.zeros((100, 100, 3), dtype=np.uint8)

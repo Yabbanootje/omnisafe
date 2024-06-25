@@ -43,6 +43,7 @@ class CMDP(ABC):
     Attributes:
         need_time_limit_wrapper (bool): Whether the environment need time limit wrapper.
         need_auto_reset_wrapper (bool): Whether the environment need auto reset wrapper.
+        need_evaluation (bool): Whether to create an instance of environment for evaluation.
     """
 
     _action_space: OmnisafeSpace
@@ -53,6 +54,7 @@ class CMDP(ABC):
     _time_limit: int | None = None
     need_time_limit_wrapper: bool
     need_auto_reset_wrapper: bool
+    need_evaluation: bool = True
 
     _support_envs: ClassVar[list[str]]
 
@@ -81,6 +83,11 @@ class CMDP(ABC):
     def observation_space(self) -> OmnisafeSpace:
         """The observation space of the environment."""
         return self._observation_space
+
+    @property
+    def max_episode_steps(self) -> int | None:
+        """The max steps per episode."""
+        return None
 
     @property
     def metadata(self) -> dict[str, Any]:
@@ -149,14 +156,6 @@ class CMDP(ABC):
         """
 
     @abstractmethod
-    def sample_action(self) -> torch.Tensor:
-        """Sample an action from the action space.
-
-        Returns:
-            The sampled action.
-        """
-
-    @abstractmethod
     def render(self) -> Any:
         """Compute the render frames as specified by :attr:`render_mode` during the initialization of the environment.
 
@@ -196,12 +195,15 @@ class Wrapper(CMDP):
 
     Attributes:
         _env (CMDP): The environment.
+        _device (torch.device): The device to use. Defaults to ``torch.device('cpu')``.
+        need_evaluation (bool): Whether to create an instance of environment for evaluation.
     """
 
     def __init__(self, env: CMDP, device: torch.device = DEVICE_CPU) -> None:
         """Initialize an instance of :class:`Wrapper`."""
         self._env: CMDP = env
         self._device: torch.device = device
+        self.need_evaluation = self._env.need_evaluation
 
     def __getattr__(self, name: str) -> Any:
         """Get the attribute of the environment.
@@ -267,14 +269,6 @@ class Wrapper(CMDP):
             seed (int): The random seed to use.
         """
         self._env.set_seed(seed)
-
-    def sample_action(self) -> torch.Tensor:
-        """Sample an action from the action space.
-
-        Returns:
-            The sampled action.
-        """
-        return self._env.sample_action()
 
     def render(self) -> Any:
         """Compute the render frames as specified by :attr:`render_mode` during the initialization of the environment.
@@ -353,6 +347,20 @@ class EnvRegister:
         self._register(env_class)
         return env_class
 
+    def unregister(self, env_class: type[CMDP]) -> type[CMDP]:
+        """Remove the environment from the register.
+
+        Args:
+            env_class (type[CMDP]): The environment class.
+        """
+        class_name = env_class.__name__
+        if class_name not in self._class:
+            print(f'{class_name} has not been registered yet')
+        else:
+            self._class.pop(class_name)
+            self._support_envs.pop(class_name)
+        return env_class
+
     def get_class(self, env_id: str, class_name: str | None) -> type[CMDP]:
         """Get the environment class.
 
@@ -388,6 +396,7 @@ ENV_REGISTRY = EnvRegister()
 
 env_register = ENV_REGISTRY.register
 support_envs = ENV_REGISTRY.support_envs
+env_unregister = ENV_REGISTRY.unregister
 
 
 def make(env_id: str, class_name: str | None = None, **kwargs: Any) -> CMDP:
