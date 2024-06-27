@@ -287,6 +287,11 @@ class PolicyGradient(BaseAlgo):
                 buffer=self._buf,
                 logger=self._logger,
             )
+            changed_task = getattr(self._env._env, "changed_task", False)
+            print("changed_task is:", changed_task)
+            if callable(changed_task) and changed_task():
+                print("resetting lr")
+                self.reset_lr()
             self._logger.store({'Time/Rollout': time.time() - rollout_time})
 
             update_time = time.time()
@@ -647,6 +652,15 @@ class PolicyGradient(BaseAlgo):
         )
         self._actor = actor_builder.build_actor(actor_type)
         self._actor.load_state_dict(model_params['pi'])
+
+    def reset_lr(self):
+        for param_group, lr in zip(self._actor_critic.actor_scheduler.optimizer.param_groups, 
+                                   self._actor_critic.actor_scheduler.base_lrs):
+            param_group['lr'] = lr
+            print(f"in reset_lr we reset param_group {param_group} with an lr of {lr}")
+
+        self._last_lr = [group['lr'] for group in self._actor_critic.actor_scheduler.optimizer.param_groups]
+        print("Then the last lr is:", self._last_lr)
 
     def load(self, 
         epoch: int, 
