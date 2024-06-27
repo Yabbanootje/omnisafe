@@ -366,7 +366,6 @@ this project, don't hesitate to ask your question on `the GitHub issue page <htt
 
     start/installation
     start/usage
-    start/env
 
 .. toctree::
     :hidden:
@@ -459,7 +458,6 @@ this project, don't hesitate to ask your question on `the GitHub issue page <htt
     :caption: envs api
 
     envs/core
-    envs/custom
     envs/wrapper
     envs/safety_gymnasium
     envs/mujoco_env

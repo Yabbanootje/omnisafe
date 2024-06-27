@@ -465,11 +465,6 @@ class SafetyGymnasiumModelBased(CMDP):  # pylint: disable=too-many-instance-attr
 
         return obs, reward, cost, terminated, truncated, info
 
-    @property
-    def max_episode_steps(self) -> int:
-        """The max steps per episode."""
-        return self._env.env.spec.max_episode_steps
-
     def reset(
         self,
         seed: int | None = None,
@@ -508,6 +503,18 @@ class SafetyGymnasiumModelBased(CMDP):  # pylint: disable=too-many-instance-attr
             seed (int): Seed to set.
         """
         self.reset(seed=seed)
+
+    def sample_action(self) -> torch.Tensor:
+        """Sample a random action.
+
+        Returns:
+            The sampled action.
+        """
+        return torch.as_tensor(
+            self._env.action_space.sample(),
+            dtype=torch.float32,
+            device=self._device,
+        )
 
     def render(self) -> Any:
         """Render the environment.
