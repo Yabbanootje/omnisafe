@@ -110,6 +110,7 @@ class Logger:  # pylint: disable=too-many-instance-attributes
                 os.path.join(self._log_dir, output_fname),
                 encoding='utf-8',
                 mode='w',
+                newline=''
             )
             atexit.register(self._output_file.close)
             self.log(f'Logging data to {self._output_file.name}', 'cyan', bold=True)
