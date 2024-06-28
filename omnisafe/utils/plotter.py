@@ -380,7 +380,6 @@ class Plotter:
         if cost_limit:
             axes[1].axhline(y=cost_limit, ls='--', c='black', linewidth=2)
         if save_name is None:
-            print(os.path.split(all_logdirs[0])[-1])
             save_name = os.path.split(all_logdirs[0])[-1]
         if show_image:
             plt.show()
