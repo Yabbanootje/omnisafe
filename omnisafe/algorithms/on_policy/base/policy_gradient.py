@@ -202,6 +202,7 @@ class PolicyGradient(BaseAlgo):
 
         what_to_save: dict[str, Any] = {}
         what_to_save['pi'] = self._actor_critic.actor
+        what_to_save['actor_critic'] = self._actor_critic
         if self._cfgs.algo_cfgs.obs_normalize:
             obs_normalizer = self._env.save()['obs_normalizer']
             what_to_save['obs_normalizer'] = obs_normalizer
