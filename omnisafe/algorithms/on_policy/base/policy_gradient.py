@@ -633,20 +633,30 @@ class PolicyGradient(BaseAlgo):
         except FileNotFoundError as error:
             raise FileNotFoundError('The model is not found in the save directory.') from error
 
-        observation_space = self._env.observation_space
-        action_space = self._env.action_space
-        actor_type = self._cfgs['model_cfgs']['actor_type']
-        pi_cfg = self._cfgs['model_cfgs']['actor']
-        weight_initialization_mode = self._cfgs['model_cfgs']['weight_initialization_mode']
-        actor_builder = ActorBuilder(
-            obs_space=observation_space,
-            act_space=action_space,
-            hidden_sizes=pi_cfg['hidden_sizes'],
-            activation=pi_cfg['activation'],
-            weight_initialization_mode=weight_initialization_mode,
-        )
-        self._actor = actor_builder.build_actor(actor_type)
-        self._actor.load_state_dict(model_params['pi'])
+        # observation_space = self._env.observation_space
+        # action_space = self._env.action_space
+        # actor_type = self._cfgs['model_cfgs']['actor_type']
+        # pi_cfg = self._cfgs['model_cfgs']['actor']
+        # weight_initialization_mode = self._cfgs['model_cfgs']['weight_initialization_mode']
+        # actor_builder = ActorBuilder(
+        #     obs_space=observation_space,
+        #     act_space=action_space,
+        #     hidden_sizes=pi_cfg['hidden_sizes'],
+        #     activation=pi_cfg['activation'],
+        #     weight_initialization_mode=weight_initialization_mode,
+        # )
+        # self._actor = actor_builder.build_actor(actor_type)
+        # self._actor.load_state_dict(model_params['pi'])
+
+        self._actor_critic: ConstraintActorCritic = ConstraintActorCritic(
+            obs_space=self._env.observation_space,
+            act_space=self._env.action_space,
+            model_cfgs=self._cfgs.model_cfgs,
+            epochs=self._cfgs.train_cfgs.epochs,
+        ).to(self._device)
+        print(f"The model_params are:\n{model_params}\n")
+        print(f"And the actor_critic key is:\n{model_params['actor_critic']}")
+        self._actor_critic.load_state_dict(model_params['actor_critic'])
 
     def load(self, 
         epoch: int, 

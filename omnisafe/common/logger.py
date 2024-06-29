@@ -195,6 +195,9 @@ class Logger:  # pylint: disable=too-many-instance-attributes
             }
             torch.save(params, path)
 
+            print(f"The model_params that are being saved are:\n{params}\n")
+            print(f"And the actor_critic key is:\n{params['actor_critic']}")
+
     def register_key(
         self,
         key: str,
