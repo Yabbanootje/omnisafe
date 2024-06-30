@@ -655,8 +655,6 @@ class PolicyGradient(BaseAlgo):
             model_cfgs=self._cfgs.model_cfgs,
             epochs=self._cfgs.train_cfgs.epochs,
         ).to(self._device)
-        print(f"The model_params are:\n{model_params}\n")
-        print(f"And the actor_critic key is:\n{model_params['actor_critic']}")
         self._actor_critic.load_state_dict(model_params['actor_critic'])
 
     def load(self, 
