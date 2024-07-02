@@ -30,7 +30,7 @@ from torch.nn.utils.clip_grad import clip_grad_norm_
 from torch.utils.data import DataLoader, TensorDataset
 from gymnasium.spaces import Box
 
-from omnisafe.adapter import OnPolicyAdapter, OnPolicyAdaptiveCurriculumAdapter
+from omnisafe.adapter import OnPolicyAdapter, OnPolicyCurriculumAdapter, OnPolicyAdaptiveCurriculumAdapter
 from omnisafe.algorithms import registry
 from omnisafe.algorithms.base_algo import BaseAlgo
 from omnisafe.common.buffer import VectorOnPolicyBuffer
@@ -206,6 +206,12 @@ class PolicyGradient(BaseAlgo):
         if self._cfgs.algo_cfgs.obs_normalize:
             obs_normalizer = self._env.save()['obs_normalizer']
             what_to_save['obs_normalizer'] = obs_normalizer
+        if self._cfgs.algo_cfgs.reward_normalize:
+            reward_normalizer = self._env.save()['reward_normalizer']
+            what_to_save['reward_normalizer'] = reward_normalizer
+        if self._cfgs.algo_cfgs.cost_normalize:
+            cost_normalizer = self._env.save()['cost_normalizer']
+            what_to_save['cost_normalizer'] = cost_normalizer
         self._logger.setup_torch_saver(what_to_save)
         self._logger.torch_save()
 
@@ -633,22 +639,35 @@ class PolicyGradient(BaseAlgo):
             model_params = torch.load(model_path)
         except FileNotFoundError as error:
             raise FileNotFoundError('The model is not found in the save directory.') from error
+        
+        # Redo _init_env with loaded parameters       
+        if re.search(r"From(\d+|T)HMA(\d+|T)", self._env_id) is not None:
+            self._env: OnPolicyAdaptiveCurriculumAdapter = OnPolicyAdaptiveCurriculumAdapter(
+                self._env_id,
+                self._cfgs.train_cfgs.vector_env_nums,
+                self._seed,
+                self._cfgs,
+            )
+        else:
+            # Create OnPolicyCurriculumAdapter to load the obs_normalizer?
+            # Also load other wrappers?
+            self._env: OnPolicyCurriculumAdapter = OnPolicyCurriculumAdapter(
+                self._env_id,
+                self._cfgs.train_cfgs.vector_env_nums,
+                self._seed,
+                self._cfgs,
+            )
+            self._env.rewrap(model_params)
+        assert (self._cfgs.algo_cfgs.steps_per_epoch) % (
+            distributed.world_size() * self._cfgs.train_cfgs.vector_env_nums
+        ) == 0, 'The number of steps per epoch is not divisible by the number of environments.'
+        self._steps_per_epoch: int = (
+            self._cfgs.algo_cfgs.steps_per_epoch
+            // distributed.world_size()
+            // self._cfgs.train_cfgs.vector_env_nums
+        )
 
-        # observation_space = self._env.observation_space
-        # action_space = self._env.action_space
-        # actor_type = self._cfgs['model_cfgs']['actor_type']
-        # pi_cfg = self._cfgs['model_cfgs']['actor']
-        # weight_initialization_mode = self._cfgs['model_cfgs']['weight_initialization_mode']
-        # actor_builder = ActorBuilder(
-        #     obs_space=observation_space,
-        #     act_space=action_space,
-        #     hidden_sizes=pi_cfg['hidden_sizes'],
-        #     activation=pi_cfg['activation'],
-        #     weight_initialization_mode=weight_initialization_mode,
-        # )
-        # self._actor = actor_builder.build_actor(actor_type)
-        # self._actor.load_state_dict(model_params['pi'])
-
+        # Redo _init_model with loaded parameters
         self._actor_critic: ConstraintActorCritic = ConstraintActorCritic(
             obs_space=self._env.observation_space,
             act_space=self._env.action_space,
@@ -656,6 +675,19 @@ class PolicyGradient(BaseAlgo):
             epochs=self._cfgs.train_cfgs.epochs,
         ).to(self._device)
         self._actor_critic.load_state_dict(model_params['actor_critic'])
+        # TODO: If assign is True the optimizer must be created after the call to load_state_dict source: https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module.load_state_dict
+
+        if distributed.world_size() > 1:
+            distributed.sync_params(self._actor_critic)
+
+        if self._cfgs.model_cfgs.exploration_noise_anneal:
+            self._actor_critic.set_annealing(
+                epochs=[0, self._cfgs.train_cfgs.epochs],
+                std=self._cfgs.model_cfgs.std_range,
+            )
+
+        self._init()
+        self._init_log()
 
     def load(self, 
         epoch: int, 

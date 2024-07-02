@@ -1,7 +1,7 @@
-from omnisafe.adapter.onpolicy_adapter import *
+from omnisafe.adapter.onpolicy_curriculum_adapter import *
 from omnisafe.utils.config import Config
 
-class OnPolicyAdaptiveCurriculumAdapter(OnPolicyAdapter):
+class OnPolicyAdaptiveCurriculumAdapter(OnPolicyCurriculumAdapter):
     def __init__(  # pylint: disable=too-many-arguments
         self,
         env_id: str,
@@ -131,19 +131,3 @@ class OnPolicyAdaptiveCurriculumAdapter(OnPolicyAdapter):
             "Value/cost": logger.get_stats("Value/cost")[0],
         }
         self._env.update(metric_dict)
-
-    def _log_metrics(self, logger: Logger, idx: int) -> None:
-        """Log metrics, including ``EpRet``, ``EpCost``, ``EpLen``.
-
-        Args:
-            logger (Logger): Logger, to log ``EpRet``, ``EpCost``, ``EpLen``.
-            idx (int): The index of the environment.
-        """
-        logger.store(
-            {
-                'Metrics/EpRet': self._ep_ret[idx],
-                'Metrics/EpCost': self._ep_cost[idx],
-                'Metrics/EpLen': self._ep_len[idx],
-                'Current_task': self._current_task,
-            },
-        )
