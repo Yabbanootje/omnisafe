@@ -225,8 +225,6 @@ class PolicyGradient(BaseAlgo):
         if re.search(r"From(\d+|T)HMA?(\d+|T)", self._env_id) is not None:
             self._logger.register_key('Current_task')
 
-        self._logger.register_key('Completed_episodes')
-
         self._logger.register_key(
             'Metrics/EpRet',
             window_length=self._cfgs.logger_cfgs.window_lens,
@@ -239,6 +237,8 @@ class PolicyGradient(BaseAlgo):
             'Metrics/EpLen',
             window_length=self._cfgs.logger_cfgs.window_lens,
         )
+
+        self._logger.register_key('Completed_episodes')
 
         self._start_epoch = 0
 
@@ -314,6 +314,13 @@ class PolicyGradient(BaseAlgo):
 
             if self._cfgs.model_cfgs.actor.lr is not None:
                 self._actor_critic.actor_scheduler.step()
+
+            if hasattr(self._env, '_tasks_done'):
+                self._logger.store(
+                    {
+                        'Completed_tasks': self._env._tasks_done,
+                    }
+                )
 
             self._logger.store(
                 {

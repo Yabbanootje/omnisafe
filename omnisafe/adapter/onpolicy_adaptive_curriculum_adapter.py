@@ -51,6 +51,7 @@ class OnPolicyAdaptiveCurriculumAdapter(OnPolicyCurriculumAdapter):
         start_obs = obs.clone().detach()
         done_task = False
         time_out_task = False
+        self._tasks_done = 0
 
         for step in track(
             range(steps_per_epoch),
@@ -102,6 +103,7 @@ class OnPolicyAdaptiveCurriculumAdapter(OnPolicyCurriculumAdapter):
                         self._ep_ret[idx] = 0.0
                         self._ep_cost[idx] = 0.0
                         self._ep_len[idx] = 0.0
+                        self._tasks_done += 1
 
                     if done:
                         done_task = True

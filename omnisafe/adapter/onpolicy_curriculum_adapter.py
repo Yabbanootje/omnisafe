@@ -152,6 +152,7 @@ class OnPolicyCurriculumAdapter(OnPolicyAdapter):
 
         obs, info = self.reset()
         self._current_task = info['current_task']
+        self._tasks_done = 0
         
         for step in track(
             range(steps_per_epoch),
@@ -208,6 +209,7 @@ class OnPolicyCurriculumAdapter(OnPolicyAdapter):
                         self._ep_ret[idx] = 0.0
                         self._ep_cost[idx] = 0.0
                         self._ep_len[idx] = 0.0
+                        self._tasks_done += 1
 
                     buffer.finish_path(last_value_r, last_value_c, idx)
 

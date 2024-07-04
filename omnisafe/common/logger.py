@@ -430,7 +430,7 @@ class Logger:  # pylint: disable=too-many-instance-attributes
         #                 raise ValueError(f'Unsupported type {type(mean)}')
                     
         # Set values in deque to get proper averages
-        for key in self._current_row.keys():
+        for key in self._headers_windows.keys():
             if self._headers_windows[key] is not None:
                 window_length = self._headers_windows[key]
 
@@ -451,15 +451,15 @@ class Logger:  # pylint: disable=too-many-instance-attributes
                     
                     if isinstance(value, (int, float)):
                         moving_sum += value
-                        for _ in completed_episodes:
-                            self._data[key].append(value/completed_episodes)
+                        for _ in range(int(row["Completed_episodes"])):
+                            self._data[key].append(value/row["Completed_episodes"])
                     elif isinstance(value, torch.Tensor):
                         moving_sum += value.mean().item()
-                        for _ in completed_episodes:
-                            self._data[key].append(value.mean().item()/completed_episodes)
+                        for _ in range(int(row["Completed_episodes"])):
+                            self._data[key].append(value.mean().item()/row["Completed_episodes"])
                     elif isinstance(value, np.ndarray):
                         moving_sum += value.mean()
-                        for _ in completed_episodes:
-                            self._data[key].append(value.mean()/completed_episodes)
+                        for _ in range(int(row["Completed_episodes"])):
+                            self._data[key].append(value.mean()/row["Completed_episodes"])
                     else:
                         raise ValueError(f'Unsupported type {type(value)}')
