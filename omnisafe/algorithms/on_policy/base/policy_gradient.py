@@ -79,6 +79,13 @@ class PolicyGradient(BaseAlgo):
                 self._cfgs.train_cfgs.vector_env_nums,
                 self._seed,
                 self._cfgs,
+            )        
+        elif re.search(r"From(\d+|T)HM(\d+|T)", self._env_id) is not None:
+            self._env: OnPolicyCurriculumAdapter = OnPolicyCurriculumAdapter(
+                self._env_id,
+                self._cfgs.train_cfgs.vector_env_nums,
+                self._seed,
+                self._cfgs,
             )
         else:
             self._env: OnPolicyAdapter = OnPolicyAdapter(
@@ -215,8 +222,10 @@ class PolicyGradient(BaseAlgo):
         self._logger.setup_torch_saver(what_to_save)
         self._logger.torch_save()
 
-        if re.search(r"From(\d+|T)HMA(\d+|T)", self._env_id) is not None:
+        if re.search(r"From(\d+|T)HMA?(\d+|T)", self._env_id) is not None:
             self._logger.register_key('Current_task')
+
+        self._logger.register_key('Completed_episodes')
 
         self._logger.register_key(
             'Metrics/EpRet',
@@ -687,7 +696,22 @@ class PolicyGradient(BaseAlgo):
             )
 
         self._init()
-        self._init_log()
+
+        # Redo part of _init_log
+        what_to_save: dict[str, Any] = {}
+        what_to_save['pi'] = self._actor_critic.actor
+        what_to_save['actor_critic'] = self._actor_critic
+        if self._cfgs.algo_cfgs.obs_normalize:
+            obs_normalizer = self._env.save()['obs_normalizer']
+            what_to_save['obs_normalizer'] = obs_normalizer
+        if self._cfgs.algo_cfgs.reward_normalize:
+            reward_normalizer = self._env.save()['reward_normalizer']
+            what_to_save['reward_normalizer'] = reward_normalizer
+        if self._cfgs.algo_cfgs.cost_normalize:
+            cost_normalizer = self._env.save()['cost_normalizer']
+            what_to_save['cost_normalizer'] = cost_normalizer
+        self._logger.setup_torch_saver(what_to_save)
+        self._logger.torch_save()
 
     def load(self, 
         epoch: int, 

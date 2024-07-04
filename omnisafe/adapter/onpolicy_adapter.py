@@ -81,6 +81,8 @@ class OnPolicyAdapter(OnlineAdapter):
         # if hasattr(self._env, "disable_progress"):
         #     disable = self._env.disable_progress
 
+        self._tasks_done = 0
+
         obs, _ = self.reset()
         for step in track(
             range(steps_per_epoch),
@@ -138,6 +140,9 @@ class OnPolicyAdapter(OnlineAdapter):
                         self._ep_cost[idx] = 0.0
                         self._ep_len[idx] = 0.0
 
+                    if done:
+                        self._tasks_done += 1
+
                     buffer.finish_path(last_value_r, last_value_c, idx)
 
     def _log_value(
@@ -175,6 +180,7 @@ class OnPolicyAdapter(OnlineAdapter):
                 'Metrics/EpRet': self._ep_ret[idx],
                 'Metrics/EpCost': self._ep_cost[idx],
                 'Metrics/EpLen': self._ep_len[idx],
+                'Completed_episodes': self._tasks_done,
             },
         )
 

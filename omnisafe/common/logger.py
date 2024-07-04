@@ -408,3 +408,58 @@ class Logger:  # pylint: disable=too-many-instance-attributes
         up_to_epoch_df = csv_df[csv_df["Train/Epoch"] < self._epoch]
         for index, row in up_to_epoch_df.iterrows():
             self._csv_writer.writerow(list(row))
+
+        # # Set values in deque to get proper averages
+        # last_row = up_to_epoch_df.iloc[-1:]
+
+        # for key in self._current_row.keys():
+        #     if self._headers_windows[key] is not None:
+        #         window_length = self._headers_windows[key]
+        #         mean_weight = min(len(up_to_epoch_df.index), window_length)
+
+        #         mean = last_row.at[key]
+
+        #         for _ in range(mean_weight):
+        #             if isinstance(mean, (int, float)):
+        #                 self._data[key].append(mean)
+        #             elif isinstance(mean, torch.Tensor):
+        #                 self._data[key].append(mean.mean().item())
+        #             elif isinstance(mean, np.ndarray):
+        #                 self._data[key].append(mean.mean())
+        #             else:
+        #                 raise ValueError(f'Unsupported type {type(mean)}')
+                    
+        # Set values in deque to get proper averages
+        for key in self._current_row.keys():
+            if self._headers_windows[key] is not None:
+                window_length = self._headers_windows[key]
+
+                moving_sum = 0
+                completed_episodes = 0
+                for _, row in up_to_epoch_df.iterrows():
+                    moving_average = row[key]
+                    completed_episodes += row["Completed_episodes"]
+                    if completed_episodes <= window_length:
+                        value = moving_average * completed_episodes - moving_sum
+                    elif completed_episodes - row["Completed_episodes"] <= window_length:
+                        overflow_episodes = window_length - completed_episodes
+                        moving_sum -= self._data[key][:overflow_episodes]
+                        value = moving_average * window_length - moving_sum
+                    else:
+                        moving_sum -= self._data[key][:row["Completed_episodes"]]
+                        value = moving_average * window_length - moving_sum
+                    
+                    if isinstance(value, (int, float)):
+                        moving_sum += value
+                        for _ in completed_episodes:
+                            self._data[key].append(value/completed_episodes)
+                    elif isinstance(value, torch.Tensor):
+                        moving_sum += value.mean().item()
+                        for _ in completed_episodes:
+                            self._data[key].append(value.mean().item()/completed_episodes)
+                    elif isinstance(value, np.ndarray):
+                        moving_sum += value.mean()
+                        for _ in completed_episodes:
+                            self._data[key].append(value.mean()/completed_episodes)
+                    else:
+                        raise ValueError(f'Unsupported type {type(value)}')

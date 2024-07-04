@@ -85,7 +85,7 @@ class OnPolicyCurriculumAdapter(OnPolicyAdapter):
         if self._env.need_auto_reset_wrapper:
             self._env = AutoReset(self._env, device=self._device)
         if self._cfgs['algo_cfgs']['obs_normalize']:
-            obs_normalizer = Normalizer(shape=self.observation_space().shape, clip=5)
+            obs_normalizer = Normalizer(shape=self.observation_space.shape, clip=5)
             obs_normalizer.load_state_dict(model_params['obs_normalizer'])
             self._env = ObsNormalize(self._env, device=self._device, norm=obs_normalizer)
         if self._cfgs['algo_cfgs']['reward_normalize']:
