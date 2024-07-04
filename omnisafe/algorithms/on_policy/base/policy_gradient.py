@@ -318,7 +318,7 @@ class PolicyGradient(BaseAlgo):
             if hasattr(self._env, '_tasks_done'):
                 self._logger.store(
                     {
-                        'Completed_tasks': self._env._tasks_done,
+                        'Completed_episodes': self._env._tasks_done,
                     }
                 )
 
