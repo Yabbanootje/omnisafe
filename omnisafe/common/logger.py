@@ -397,7 +397,7 @@ class Logger:  # pylint: disable=too-many-instance-attributes
             self._output_file.close()
 
     def copy_from_csv(self, path_to_input_csv) -> None:
-        """Copy progress from a progress.csv file"""
+        """Copy progress from a progress.csv file to the logger"""
         # First write the column names
         if self._first_row:
             self._csv_writer.writerow(self._current_row.keys())
@@ -408,47 +408,31 @@ class Logger:  # pylint: disable=too-many-instance-attributes
         up_to_epoch_df = csv_df[csv_df["Train/Epoch"] < self._epoch]
         for index, row in up_to_epoch_df.iterrows():
             self._csv_writer.writerow(list(row))
-
-        # # Set values in deque to get proper averages
-        # last_row = up_to_epoch_df.iloc[-1:]
-
-        # for key in self._current_row.keys():
-        #     if self._headers_windows[key] is not None:
-        #         window_length = self._headers_windows[key]
-        #         mean_weight = min(len(up_to_epoch_df.index), window_length)
-
-        #         mean = last_row.at[key]
-
-        #         for _ in range(mean_weight):
-        #             if isinstance(mean, (int, float)):
-        #                 self._data[key].append(mean)
-        #             elif isinstance(mean, torch.Tensor):
-        #                 self._data[key].append(mean.mean().item())
-        #             elif isinstance(mean, np.ndarray):
-        #                 self._data[key].append(mean.mean())
-        #             else:
-        #                 raise ValueError(f'Unsupported type {type(mean)}')
                     
         # Set values in deque to get proper averages
         for key in self._headers_windows.keys():
+            # If we need to get the averages
             if self._headers_windows[key] is not None:
                 window_length = self._headers_windows[key]
 
                 moving_sum = 0
                 completed_episodes = 0
+
                 for _, row in up_to_epoch_df.iterrows():
+                    # Compute the sum of the values for one episode
                     moving_average = row[key]
                     completed_episodes += row["Completed_episodes"]
                     if completed_episodes <= window_length:
                         value = moving_average * completed_episodes - moving_sum
-                    elif completed_episodes - row["Completed_episodes"] <= window_length:
-                        overflow_episodes = window_length - completed_episodes
-                        moving_sum -= self._data[key][:overflow_episodes]
+                    elif completed_episodes - row["Completed_episodes"] < window_length:
+                        overflow_episodes = completed_episodes - window_length
+                        moving_sum -= sum([self._data[key][i] for i in range(overflow_episodes)])
                         value = moving_average * window_length - moving_sum
                     else:
-                        moving_sum -= self._data[key][:row["Completed_episodes"]]
+                        moving_sum -= sum([self._data[key][i] for i in range(row["Completed_episodes"])])
                         value = moving_average * window_length - moving_sum
                     
+                    # Add average episode value of the epoch to the queue
                     if isinstance(value, (int, float)):
                         moving_sum += value
                         for _ in range(int(row["Completed_episodes"])):
