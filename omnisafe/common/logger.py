@@ -425,11 +425,11 @@ class Logger:  # pylint: disable=too-many-instance-attributes
                     if completed_episodes <= window_length:
                         value = moving_average * completed_episodes - moving_sum
                     elif completed_episodes - row["Completed_episodes"] < window_length:
-                        overflow_episodes = completed_episodes - window_length
+                        overflow_episodes = int(completed_episodes - window_length)
                         moving_sum -= sum([self._data[key][i] for i in range(overflow_episodes)])
                         value = moving_average * window_length - moving_sum
                     else:
-                        moving_sum -= sum([self._data[key][i] for i in range(row["Completed_episodes"])])
+                        moving_sum -= sum([self._data[key][i] for i in range(int(row["Completed_episodes"]))])
                         value = moving_average * window_length - moving_sum
                     
                     # Add average episode value of the epoch to the queue
