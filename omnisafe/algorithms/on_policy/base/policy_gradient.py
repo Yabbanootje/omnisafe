@@ -80,7 +80,7 @@ class PolicyGradient(BaseAlgo):
                 self._seed,
                 self._cfgs,
             )        
-        elif re.search(r"From(\d+|T)HM(\d+|T)", self._env_id) is not None:
+        elif re.search(r"From(\d+|T)HMR?(\d+|T)", self._env_id) is not None:
             self._env: OnPolicyCurriculumAdapter = OnPolicyCurriculumAdapter(
                 self._env_id,
                 self._cfgs.train_cfgs.vector_env_nums,
