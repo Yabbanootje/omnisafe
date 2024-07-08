@@ -222,7 +222,7 @@ class PolicyGradient(BaseAlgo):
         self._logger.setup_torch_saver(what_to_save)
         self._logger.torch_save()
 
-        if re.search(r"From(\d+|T)HMA?(\d+|T)", self._env_id) is not None:
+        if re.search(r"From(\d+|T)HMR?A?(\d+|T)", self._env_id) is not None:
             self._logger.register_key('Current_task')
 
         self._logger.register_key(
