@@ -665,8 +665,6 @@ class PolicyGradient(BaseAlgo):
                 self._cfgs,
             )
         else:
-            # Create OnPolicyCurriculumAdapter to load the obs_normalizer?
-            # Also load other wrappers?
             self._env: OnPolicyCurriculumAdapter = OnPolicyCurriculumAdapter(
                 self._env_id,
                 self._cfgs.train_cfgs.vector_env_nums,
@@ -691,8 +689,7 @@ class PolicyGradient(BaseAlgo):
             epochs=self._cfgs.train_cfgs.epochs,
         ).to(self._device)
         self._actor_critic.load_state_dict(model_params['actor_critic'])
-        # TODO: If assign is True the optimizer must be created after the call to load_state_dict source: https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module.load_state_dict
-
+        
         if distributed.world_size() > 1:
             distributed.sync_params(self._actor_critic)
 

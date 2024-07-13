@@ -15,6 +15,8 @@
 """Adapter for the environment and the algorithm."""
 
 from omnisafe.adapter.early_terminated_adapter import EarlyTerminatedAdapter
+from omnisafe.adapter.early_terminated_curriculum_adapter import EarlyTerminatedCurriculumAdapter
+from omnisafe.adapter.early_terminated_adaptive_curriculum_adapter import EarlyTerminatedAdaptiveCurriculumAdapter
 from omnisafe.adapter.modelbased_adapter import ModelBasedAdapter
 from omnisafe.adapter.offline_adapter import OfflineAdapter
 from omnisafe.adapter.offpolicy_adapter import OffPolicyAdapter
