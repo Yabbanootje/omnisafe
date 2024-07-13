@@ -160,3 +160,20 @@ class PPOEarlyTerminated(PPO):
             what_to_save['cost_normalizer'] = cost_normalizer
         self._logger.setup_torch_saver(what_to_save)
         self._logger.torch_save()
+
+    def load(self, 
+        epoch: int, 
+        path: str,
+    ) -> None:
+        """Load a saved model.
+
+        Args:
+            epoch (int): The epoch to be loaded.
+            path (str): The path to the saved model that should be loaded.
+        """
+        self.__load_model_and_env(epoch=epoch, path=path)
+
+        self._start_epoch = epoch
+        self._logger.set_current_epoch(epoch)
+
+        self._logger.copy_from_csv(os.path.join(path, "progress.csv"))
