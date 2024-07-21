@@ -120,7 +120,7 @@ class PPOLag(PPO):
         # load the saved model
         model_path = os.path.join(path, 'torch_save', f'epoch-{epoch}.pt')
         try:
-            model_params = torch.load(model_path, map_location=torch.device('cpu'))
+            model_params = torch.load(model_path)
         except FileNotFoundError as error:
             raise FileNotFoundError('The model is not found in the save directory.') from error
         
