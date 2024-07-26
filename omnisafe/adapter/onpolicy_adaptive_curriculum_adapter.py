@@ -18,8 +18,8 @@ class OnPolicyAdaptiveCurriculumAdapter(OnPolicyCurriculumAdapter):
         super_cfgs = Config.dict2config(super_cfgs)
         super().__init__(env_id, num_envs, seed, super_cfgs)
         print("initialized an OnPolicyAdaptiveCurriculumAdapter with cfgs:", cfgs)
-        self._env.set_beta(beta)
-        self._env.set_kappa(kappa)
+        self._env.set_beta(cfgs["exp_increment_cfgs"]["env_cfgs"]["beta"])
+        self._env.set_kappa(cfgs["exp_increment_cfgs"]["env_cfgs"]["kappa"])
 
         start_version_pattern = r'From(\d+|T)'
         start_version = re.search(start_version_pattern, env_id)
@@ -42,8 +42,12 @@ class OnPolicyAdaptiveCurriculumAdapter(OnPolicyCurriculumAdapter):
 
         beta = env_cfgs.pop('beta', None)
         kappa = env_cfgs.pop('kappa', None)
+        early_stop_before = env_cfgs.pop('early_stop_before', None)
 
         self._env: CMDP = make(self._env_id, num_envs=self._num_envs, device=self._device, **env_cfgs)
+
+        self._env.set_beta(self._cfgs["exp_increment_cfgs"]["env_cfgs"]["beta"])
+        self._env.set_kappa(self._cfgs["exp_increment_cfgs"]["env_cfgs"]["kappa"])
 
         if self._env.need_time_limit_wrapper:
             assert (

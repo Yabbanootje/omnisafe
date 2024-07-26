@@ -75,6 +75,7 @@ class PolicyGradient(BaseAlgo):
                 environments.
         """
         if re.search(r"From(\d+|T)HMA(\d+|T)", self._env_id) is not None:
+            self.early_stop_before = self._cfgs["exp_increment_cfgs"]["env_cfgs"]["early_stop_before"]
             self._env: OnPolicyAdaptiveCurriculumAdapter = OnPolicyAdaptiveCurriculumAdapter(
                 self._env_id,
                 self._cfgs.train_cfgs.vector_env_nums,
@@ -356,11 +357,14 @@ class PolicyGradient(BaseAlgo):
                 epoch + 1
             ) == self._cfgs.train_cfgs.epochs:
                 self._logger.torch_save()
-            elif save_now:
-                self._logger.torch_save()
+            if save_now:
+                if not ((epoch + 1) % self._cfgs.logger_cfgs.save_model_freq == 0 or (
+                    epoch + 1
+                )) == self._cfgs.train_cfgs.epochs:
+                    self._logger.torch_save()
 
                 # Stop early
-                if current_task < self._cfgs["env_cfgs"]["early_stop_before"]:
+                if current_task < self.early_stop_before:
                     ep_ret = self._logger.get_stats('Metrics/EpRet')[0]
                     ep_cost = self._logger.get_stats('Metrics/EpCost')[0]
                     ep_len = self._logger.get_stats('Metrics/EpLen')[0]
@@ -682,6 +686,7 @@ class PolicyGradient(BaseAlgo):
         
         # Redo _init_env with loaded parameters
         if re.search(r"From(\d+|T)HMA(\d+|T)", self._env_id) is not None:
+            self.early_stop_before = self._cfgs["exp_increment_cfgs"]["env_cfgs"]["early_stop_before"]
             self._env: OnPolicyAdaptiveCurriculumAdapter = OnPolicyAdaptiveCurriculumAdapter(
                 self._env_id,
                 self._cfgs.train_cfgs.vector_env_nums,
