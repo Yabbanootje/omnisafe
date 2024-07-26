@@ -17,11 +17,12 @@
 from __future__ import annotations
 
 import time
-from typing import Any
+from typing import Any, Optional
 import os
 import json
 
 import numpy as np
+import pandas as pd
 import re
 import torch
 import torch.nn as nn
@@ -79,7 +80,7 @@ class PolicyGradient(BaseAlgo):
                 self._cfgs.train_cfgs.vector_env_nums,
                 self._seed,
                 self._cfgs,
-            )        
+            )
         elif re.search(r"From(\d+|T)HMR?(\d+|T)", self._env_id) is not None:
             self._env: OnPolicyCurriculumAdapter = OnPolicyCurriculumAdapter(
                 self._env_id,
@@ -224,6 +225,8 @@ class PolicyGradient(BaseAlgo):
 
         if re.search(r"From(\d+|T)HMR?A?(\d+|T)", self._env_id) is not None:
             self._logger.register_key('Current_task')
+        if re.search(r"From(\d+|T)HMA(\d+|T)", self._env_id) is not None:
+            self._logger.register_key('Ready_for_next_task')
 
         self._logger.register_key(
             'Metrics/EpRet',
@@ -337,12 +340,20 @@ class PolicyGradient(BaseAlgo):
                 },
             )
 
+            # If adaptive agent needs to be saved after dump_tabular
+            if re.search(r"From(\d+|T)HMA(\d+|T)", self._env_id) is not None and self._logger.get_stats("Ready_for_next_task")[0] == 1.0:
+                save_now = True
+            else:
+                save_now = False
+
             self._logger.dump_tabular()
 
             # save model to disk
             if (epoch + 1) % self._cfgs.logger_cfgs.save_model_freq == 0 or (
                 epoch + 1
             ) == self._cfgs.train_cfgs.epochs:
+                self._logger.torch_save()
+            elif save_now:
                 self._logger.torch_save()
 
         ep_ret = self._logger.get_stats('Metrics/EpRet')[0]
@@ -656,7 +667,7 @@ class PolicyGradient(BaseAlgo):
         except FileNotFoundError as error:
             raise FileNotFoundError('The model is not found in the save directory.') from error
         
-        # Redo _init_env with loaded parameters       
+        # Redo _init_env with loaded parameters
         if re.search(r"From(\d+|T)HMA(\d+|T)", self._env_id) is not None:
             self._env: OnPolicyAdaptiveCurriculumAdapter = OnPolicyAdaptiveCurriculumAdapter(
                 self._env_id,
@@ -664,6 +675,7 @@ class PolicyGradient(BaseAlgo):
                 self._seed,
                 self._cfgs,
             )
+            self._env.rewrap(model_params)
         else:
             self._env: OnPolicyCurriculumAdapter = OnPolicyCurriculumAdapter(
                 self._env_id,
@@ -717,9 +729,26 @@ class PolicyGradient(BaseAlgo):
         self._logger.setup_torch_saver(what_to_save)
         self._logger.torch_save()
 
+    def __get_adaptive_epoch(self,
+        path: str
+    ) -> int:
+        csv_df = pd.read_csv(path)
+        print("csv_df:", csv_df)
+        last_task = csv_df["Current_task"].iloc[-1]
+        print("last_task:", last_task)
+        last_task_df = csv_df[csv_df['Current_task'] == last_task]
+        print("last_task_df:", last_task_df)
+        for _, row in last_task_df.iterrows():
+            print("row:", row)
+            if row["Ready_for_next_task"] == 1:
+                print('returning row["Train/Epoch"] + 1:', row["Train/Epoch"] + 1)
+                return int(row["Train/Epoch"] + 1)
+        print('returning last_task_df["Train/Epoch"] + 1:', last_task_df["Train/Epoch"] + 1)
+        return int(last_task_df["Train/Epoch"] + 1)
+
     def load(self, 
-        epoch: int, 
         path: str,
+        epoch: int | None = None, 
     ) -> None:
         """Load a saved model.
 
@@ -727,6 +756,9 @@ class PolicyGradient(BaseAlgo):
             epoch (int): The epoch to be loaded.
             path (str): The path to the saved model that should be loaded.
         """
+        if epoch is None:
+            epoch = self.__get_adaptive_epoch(os.path.join(path, "progress.csv"))
+
         self.__load_model_and_env(epoch=epoch, path=path)
 
         self._start_epoch = epoch

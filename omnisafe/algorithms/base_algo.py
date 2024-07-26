@@ -83,5 +83,5 @@ class BaseAlgo(ABC):  # pylint: disable=too-few-public-methods
         """Learn the policy."""
 
     @abstractmethod
-    def load(self, epoch, path) -> None:
+    def load(self, path, epoch=None) -> None:
         """Load a previously trained model."""
