@@ -346,6 +346,9 @@ class PolicyGradient(BaseAlgo):
             else:
                 save_now = False
 
+            if re.search(r"From(\d+|T)HMR?A?(\d+|T)", self._env_id) is not None:
+                current_task = self._logger.get_stats("Current_task")[0]
+
             self._logger.dump_tabular()
 
             # save model to disk
@@ -355,6 +358,16 @@ class PolicyGradient(BaseAlgo):
                 self._logger.torch_save()
             elif save_now:
                 self._logger.torch_save()
+
+                # Stop early
+                if current_task < self._cfgs["env_cfgs"]["early_stop_before"]:
+                    ep_ret = self._logger.get_stats('Metrics/EpRet')[0]
+                    ep_cost = self._logger.get_stats('Metrics/EpCost')[0]
+                    ep_len = self._logger.get_stats('Metrics/EpLen')[0]
+                    self._logger.close()
+                    self._env.close()
+
+                    return ep_ret, ep_cost, ep_len
 
         ep_ret = self._logger.get_stats('Metrics/EpRet')[0]
         ep_cost = self._logger.get_stats('Metrics/EpCost')[0]
@@ -733,17 +746,11 @@ class PolicyGradient(BaseAlgo):
         path: str
     ) -> int:
         csv_df = pd.read_csv(path)
-        print("csv_df:", csv_df)
         last_task = csv_df["Current_task"].iloc[-1]
-        print("last_task:", last_task)
         last_task_df = csv_df[csv_df['Current_task'] == last_task]
-        print("last_task_df:", last_task_df)
         for _, row in last_task_df.iterrows():
-            print("row:", row)
             if row["Ready_for_next_task"] == 1:
-                print('returning row["Train/Epoch"] + 1:', row["Train/Epoch"] + 1)
                 return int(row["Train/Epoch"] + 1)
-        print('returning last_task_df["Train/Epoch"] + 1:', last_task_df["Train/Epoch"] + 1)
         return int(last_task_df["Train/Epoch"] + 1)
 
     def load(self, 

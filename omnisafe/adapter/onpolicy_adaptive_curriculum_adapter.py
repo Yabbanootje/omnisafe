@@ -14,6 +14,7 @@ class OnPolicyAdaptiveCurriculumAdapter(OnPolicyCurriculumAdapter):
         super_cfgs = cfgs.copy()
         beta = super_cfgs["env_cfgs"].pop('beta', None)
         kappa = super_cfgs["env_cfgs"].pop('kappa', None)
+        early_stop_before = super_cfgs["env_cfgs"].pop('early_stop_before', None)
         super_cfgs = Config.dict2config(super_cfgs)
         super().__init__(env_id, num_envs, seed, super_cfgs)
         print("initialized an OnPolicyAdaptiveCurriculumAdapter with cfgs:", cfgs)
