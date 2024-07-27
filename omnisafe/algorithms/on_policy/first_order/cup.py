@@ -282,9 +282,20 @@ class CUP(PPO):
         self._logger.setup_torch_saver(what_to_save)
         self._logger.torch_save()
 
+    def __get_adaptive_epoch(self,
+        path: str
+    ) -> int:
+        csv_df = pd.read_csv(path)
+        last_task = csv_df["Current_task"].iloc[-1]
+        last_task_df = csv_df[csv_df['Current_task'] == last_task]
+        for _, row in last_task_df.iterrows():
+            if row["Ready_for_next_task"] == 1:
+                return int(row["Train/Epoch"] + 1)
+        return int(last_task_df["Train/Epoch"] + 1)
+
     def load(self, 
-        epoch: int, 
         path: str,
+        epoch: int | None = None, 
     ) -> None:
         """Load a saved model.
 
@@ -292,6 +303,9 @@ class CUP(PPO):
             epoch (int): The epoch to be loaded.
             path (str): The path to the saved model that should be loaded.
         """
+        if epoch is None:
+            epoch = self.__get_adaptive_epoch(os.path.join(path, "progress.csv"))
+            
         self.__load_model_and_env(epoch=epoch, path=path)
 
         self._start_epoch = epoch
