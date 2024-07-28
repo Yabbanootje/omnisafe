@@ -130,3 +130,5 @@ defaults:
     lambda_optimizer: "Adam"
     # The upper bound of lagrange multiplier
     lagrangian_upper_bound: 2.0
+  # environment specific configurations
+  env_cfgs: {}
