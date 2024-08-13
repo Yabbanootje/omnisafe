@@ -291,7 +291,10 @@ class CUP(PPO):
         for _, row in last_task_df.iterrows():
             if row["Ready_for_next_task"] == 1:
                 return int(row["Train/Epoch"] + 1)
-        return int(last_task_df["Train/Epoch"] + 1)
+        # If the previous save did not reach the point of being ready for the next task,
+        # return the last row with the idea that this is also the last epoch for this new iteration,
+        # meaning that it will immediately stop
+        return int(last_task_df["Train/Epoch"].iloc[-1] + 1)
 
     def load(self, 
         path: str,
