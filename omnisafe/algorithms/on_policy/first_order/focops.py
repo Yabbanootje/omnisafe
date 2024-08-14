@@ -333,8 +333,8 @@ class FOCOPS(PolicyGradient):
         """Load a saved model.
 
         Args:
-            epoch (int): The epoch to be loaded.
             path (str): The path to the saved model that should be loaded.
+            epoch (int or None): The epoch to be loaded.
         """
         if epoch is None:
             epoch = self.__get_adaptive_epoch(os.path.join(path, "progress.csv"))
@@ -346,6 +346,7 @@ class FOCOPS(PolicyGradient):
 
         self._logger.copy_from_csv(os.path.join(path, "progress.csv"))
 
+        # Keep the lagrangian multiplier
         csv_df = pd.read_csv(os.path.join(path, "progress.csv"))
         final_epoch_df = csv_df[csv_df["Train/Epoch"] == epoch - 1]
         self._cfgs.lagrange_cfgs["lagrangian_multiplier_init"] = final_epoch_df.iloc[0]["Metrics/LagrangeMultiplier"]
