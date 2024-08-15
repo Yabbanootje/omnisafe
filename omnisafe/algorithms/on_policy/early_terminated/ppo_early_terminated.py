@@ -50,6 +50,7 @@ class PPOEarlyTerminated(PPO):
             ...     self._env = CustomAdapter()
         """
         if re.search(r"From(\d+|T)HMA(\d+|T)", self._env_id) is not None:
+            self.early_stop_before = self._cfgs["exp_increment_cfgs"]["env_cfgs"]["early_stop_before"]
             self._env: EarlyTerminatedAdaptiveCurriculumAdapter = EarlyTerminatedAdaptiveCurriculumAdapter(
                 self._env_id,
                 self._cfgs.train_cfgs.vector_env_nums,
@@ -102,6 +103,7 @@ class PPOEarlyTerminated(PPO):
         
         # Redo _init_env with loaded parameters       
         if re.search(r"From(\d+|T)HMA(\d+|T)", self._env_id) is not None:
+            self.early_stop_before = self._cfgs["exp_increment_cfgs"]["env_cfgs"]["early_stop_before"]
             self._env: EarlyTerminatedAdaptiveCurriculumAdapter = EarlyTerminatedAdaptiveCurriculumAdapter(
                 self._env_id,
                 self._cfgs.train_cfgs.vector_env_nums,
