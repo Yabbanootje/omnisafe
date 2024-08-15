@@ -216,7 +216,7 @@ class OnPolicyAdaptiveCurriculumAdapter(OnPolicyCurriculumAdapter):
             "Metrics/EpLen": logger.get_stats("Metrics/EpLen")[0],
             'Completed_episodes': self._tasks_done,
             "Value/reward": logger.get_stats("Value/reward")[0],
-            "Value/cost": logger.get_stats("Value/cost")[0],
+            "Value/cost": logger.get_stats("Value/cost")[0] if self._cfgs.algo_cfgs.use_cost else None,
         }
         ready_for_next_task = self._env.update(metric_dict)
         if self.saved_current_task < 1:
